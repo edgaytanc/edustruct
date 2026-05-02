@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: edustruct-backend
+    ports:
+      - "${BACKEND_PORT}:5000"
+    environment:
+      APP_NAME: EduStruct API
+      FLASK_ENV: development
+      DEBUG: "True"
+      PORT: 5000
+      FRONTEND_URL: ${FRONTEND_URL}
+    volumes:
+      - ./backend:/app
+    networks:
+      - edustruct-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: edustruct-frontend
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - edustruct-network
+
+networks:
+  edustruct-network:
+    driver: bridge
