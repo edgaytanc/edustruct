@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker
+*.log
+
+# Env files
+backend/.env
+frontend/.env
