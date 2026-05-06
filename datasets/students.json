@@ -1,0 +1,58 @@
+[
+  {
+    "carnet": "2024001",
+    "name": "Ana López",
+    "career_id": "CAR-001",
+    "email": "ana.lopez@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024002",
+    "name": "Carlos Pérez",
+    "career_id": "CAR-001",
+    "email": "carlos.perez@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024003",
+    "name": "María García",
+    "career_id": "CAR-001",
+    "email": "maria.garcia@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024004",
+    "name": "Luis Ramírez",
+    "career_id": "CAR-001",
+    "email": "luis.ramirez@edustruct.edu",
+    "status": "suspended"
+  },
+  {
+    "carnet": "2024005",
+    "name": "Sofía Hernández",
+    "career_id": "CAR-001",
+    "email": "sofia.hernandez@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024006",
+    "name": "Diego Morales",
+    "career_id": "CAR-001",
+    "email": "diego.morales@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024007",
+    "name": "Andrea Castillo",
+    "career_id": "CAR-001",
+    "email": "andrea.castillo@edustruct.edu",
+    "status": "active"
+  },
+  {
+    "carnet": "2024008",
+    "name": "José Méndez",
+    "career_id": "CAR-001",
+    "email": "jose.mendez@edustruct.edu",
+    "status": "inactive"
+  }
+]

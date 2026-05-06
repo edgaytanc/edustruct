@@ -1,0 +1,12 @@
+[
+  {
+    "id": "FAC-001",
+    "name": "Facultad de Ingeniería",
+    "description": "Unidad académica enfocada en ingeniería, tecnología y ciencias aplicadas"
+  },
+  {
+    "id": "FAC-002",
+    "name": "Facultad de Ciencias Económicas",
+    "description": "Unidad académica enfocada en administración, economía, finanzas y contabilidad"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "CAR-001",
+    "faculty_id": "FAC-001",
+    "name": "Ingeniería en Sistemas",
+    "description": "Carrera enfocada en desarrollo de software, estructuras de datos, redes y sistemas de información"
+  },
+  {
+    "id": "CAR-002",
+    "faculty_id": "FAC-001",
+    "name": "Ingeniería Industrial",
+    "description": "Carrera enfocada en procesos, producción, calidad y gestión industrial"
+  },
+  {
+    "id": "CAR-003",
+    "faculty_id": "FAC-002",
+    "name": "Administración de Empresas",
+    "description": "Carrera enfocada en gestión empresarial, liderazgo, finanzas y operaciones"
+  },
+  {
+    "id": "CAR-004",
+    "faculty_id": "FAC-002",
+    "name": "Contaduría Pública",
+    "description": "Carrera enfocada en auditoría, contabilidad financiera, fiscalidad y control interno"
+  }
+]

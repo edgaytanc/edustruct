@@ -1,0 +1,130 @@
+[
+  {
+    "id": "CUR-001",
+    "cycle_id": "CIC-001",
+    "code": "SIS-101",
+    "name": "Introducción a la Programación",
+    "credits": 5,
+    "description": "Curso introductorio para desarrollar lógica de programación y fundamentos de algoritmos"
+  },
+  {
+    "id": "CUR-002",
+    "cycle_id": "CIC-001",
+    "code": "MAT-101",
+    "name": "Matemática I",
+    "credits": 5,
+    "description": "Curso base de matemática universitaria"
+  },
+  {
+    "id": "CUR-003",
+    "cycle_id": "CIC-001",
+    "code": "SIS-102",
+    "name": "Lógica de Sistemas",
+    "credits": 4,
+    "description": "Curso orientado al razonamiento lógico aplicado a sistemas"
+  },
+  {
+    "id": "CUR-004",
+    "cycle_id": "CIC-001",
+    "code": "GEN-101",
+    "name": "Técnicas de Estudio",
+    "credits": 3,
+    "description": "Curso de apoyo para hábitos, organización y aprendizaje académico"
+  },
+  {
+    "id": "CUR-005",
+    "cycle_id": "CIC-002",
+    "code": "SIS-201",
+    "name": "Programación I",
+    "credits": 5,
+    "description": "Curso de programación estructurada y resolución de problemas"
+  },
+  {
+    "id": "CUR-006",
+    "cycle_id": "CIC-002",
+    "code": "MAT-201",
+    "name": "Matemática II",
+    "credits": 5,
+    "description": "Continuación de matemática universitaria con aplicación a ingeniería"
+  },
+  {
+    "id": "CUR-007",
+    "cycle_id": "CIC-002",
+    "code": "SIS-202",
+    "name": "Arquitectura de Computadoras",
+    "credits": 4,
+    "description": "Curso sobre componentes, organización y funcionamiento interno del computador"
+  },
+  {
+    "id": "CUR-008",
+    "cycle_id": "CIC-002",
+    "code": "EST-201",
+    "name": "Estadística I",
+    "credits": 4,
+    "description": "Curso introductorio a estadística descriptiva e inferencial"
+  },
+  {
+    "id": "CUR-009",
+    "cycle_id": "CIC-003",
+    "code": "SIS-301",
+    "name": "Programación II",
+    "credits": 5,
+    "description": "Curso de programación orientada a objetos y estructuras base"
+  },
+  {
+    "id": "CUR-010",
+    "cycle_id": "CIC-003",
+    "code": "SIS-302",
+    "name": "Estructuras de Datos",
+    "credits": 5,
+    "description": "Curso sobre listas, pilas, colas, árboles, grafos y tablas hash"
+  },
+  {
+    "id": "CUR-011",
+    "cycle_id": "CIC-003",
+    "code": "SIS-303",
+    "name": "Bases de Datos",
+    "credits": 5,
+    "description": "Curso de modelado, consulta y gestión de bases de datos relacionales"
+  },
+  {
+    "id": "CUR-012",
+    "cycle_id": "CIC-003",
+    "code": "FIS-301",
+    "name": "Física I",
+    "credits": 4,
+    "description": "Curso base de física aplicada a ingeniería"
+  },
+  {
+    "id": "CUR-013",
+    "cycle_id": "CIC-003",
+    "code": "SIS-304",
+    "name": "Programación III",
+    "credits": 5,
+    "description": "Curso avanzado de estructuras de datos, algoritmos y desarrollo de aplicaciones"
+  },
+  {
+    "id": "CUR-014",
+    "cycle_id": "CIC-003",
+    "code": "SIS-305",
+    "name": "Algoritmos",
+    "credits": 5,
+    "description": "Curso de análisis, diseño y optimización de algoritmos"
+  },
+  {
+    "id": "CUR-015",
+    "cycle_id": "CIC-003",
+    "code": "SIS-306",
+    "name": "Sistemas Operativos",
+    "credits": 5,
+    "description": "Curso sobre procesos, memoria, archivos y administración de recursos"
+  },
+  {
+    "id": "CUR-016",
+    "cycle_id": "CIC-003",
+    "code": "SIS-307",
+    "name": "Inteligencia Artificial",
+    "credits": 5,
+    "description": "Curso introductorio a técnicas y modelos de inteligencia artificial"
+  }
+]
