@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 from app.config import Config
+from app.errors.handlers import register_error_handlers
 from app.routes import all_blueprints
 
 
@@ -14,6 +15,8 @@ def create_app():
         resources={r"/api/*": {"origins": app.config["FRONTEND_URL"]}},
         supports_credentials=True
     )
+
+    register_error_handlers(app)
 
     for blueprint in all_blueprints:
         app.register_blueprint(blueprint)
