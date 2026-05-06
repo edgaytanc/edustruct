@@ -1,0 +1,20 @@
+[
+  {
+    "id": "CIC-001",
+    "career_id": "CAR-001",
+    "name": "Primer Ciclo",
+    "order": 1
+  },
+  {
+    "id": "CIC-002",
+    "career_id": "CAR-001",
+    "name": "Segundo Ciclo",
+    "order": 2
+  },
+  {
+    "id": "CIC-003",
+    "career_id": "CAR-001",
+    "name": "Tercer Ciclo",
+    "order": 3
+  }
+]

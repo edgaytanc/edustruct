@@ -1,0 +1,34 @@
+[
+  {
+    "course_id": "CUR-005",
+    "prerequisite_id": "CUR-001"
+  },
+  {
+    "course_id": "CUR-009",
+    "prerequisite_id": "CUR-005"
+  },
+  {
+    "course_id": "CUR-013",
+    "prerequisite_id": "CUR-009"
+  },
+  {
+    "course_id": "CUR-010",
+    "prerequisite_id": "CUR-009"
+  },
+  {
+    "course_id": "CUR-014",
+    "prerequisite_id": "CUR-010"
+  },
+  {
+    "course_id": "CUR-016",
+    "prerequisite_id": "CUR-014"
+  },
+  {
+    "course_id": "CUR-011",
+    "prerequisite_id": "CUR-005"
+  },
+  {
+    "course_id": "CUR-015",
+    "prerequisite_id": "CUR-007"
+  }
+]

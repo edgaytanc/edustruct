@@ -1,0 +1,70 @@
+[
+  {
+    "id": "EXP-1001",
+    "student_carnet": "2024001",
+    "status": "active",
+    "average": 88.5,
+    "approved_courses": [
+      "CUR-001",
+      "CUR-002",
+      "CUR-003",
+      "CUR-005",
+      "CUR-009"
+    ],
+    "failed_courses": []
+  },
+  {
+    "id": "EXP-1002",
+    "student_carnet": "2024002",
+    "status": "active",
+    "average": 82.0,
+    "approved_courses": [
+      "CUR-001",
+      "CUR-005",
+      "CUR-009"
+    ],
+    "failed_courses": [
+      "CUR-006"
+    ]
+  },
+  {
+    "id": "EXP-1003",
+    "student_carnet": "2024003",
+    "status": "active",
+    "average": 91.2,
+    "approved_courses": [
+      "CUR-001",
+      "CUR-002",
+      "CUR-005",
+      "CUR-007",
+      "CUR-009"
+    ],
+    "failed_courses": []
+  },
+  {
+    "id": "EXP-1004",
+    "student_carnet": "2024004",
+    "status": "suspended",
+    "average": 68.4,
+    "approved_courses": [
+      "CUR-001",
+      "CUR-005"
+    ],
+    "failed_courses": [
+      "CUR-009"
+    ]
+  },
+  {
+    "id": "EXP-1005",
+    "student_carnet": "2024005",
+    "status": "active",
+    "average": 85.7,
+    "approved_courses": [
+      "CUR-001",
+      "CUR-002",
+      "CUR-005",
+      "CUR-009"
+    ],
+    "failed_courses": []
+  }
+]

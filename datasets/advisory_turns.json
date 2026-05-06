@@ -1,0 +1,30 @@
+[
+  {
+    "id": "TURN-001",
+    "student_carnet": "2024001",
+    "reason": "Asignación de curso",
+    "status": "pending",
+    "created_at": "2026-05-05T09:00:00"
+  },
+  {
+    "id": "TURN-002",
+    "student_carnet": "2024002",
+    "reason": "Validación de prerrequisitos",
+    "status": "pending",
+    "created_at": "2026-05-05T09:10:00"
+  },
+  {
+    "id": "TURN-003",
+    "student_carnet": "2024003",
+    "reason": "Consulta de expediente",
+    "status": "pending",
+    "created_at": "2026-05-05T09:20:00"
+  },
+  {
+    "id": "TURN-004",
+    "student_carnet": "2024004",
+    "reason": "Cambio de carrera",
+    "status": "pending",
+    "created_at": "2026-05-05T09:30:00"
+  }
+]
