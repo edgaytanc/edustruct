@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.errors.exceptions import StructureEmptyError, ValidationError
+from app.serializers.react_flow_serializer import serialize_stack
 from app.structures.stack import Stack
 
 
@@ -114,11 +115,14 @@ class StackService:
 
     def _build_result(self) -> dict[str, Any]:
         items = self._stack.to_list()
+        visualization = serialize_stack(items)
         return {
             "items": items,
             "size": self._stack.size(),
             "top": items[0] if items else None,
             "isEmpty": self._stack.is_empty(),
+            "nodes": visualization["nodes"],
+            "edges": visualization["edges"],
         }
 
     @staticmethod

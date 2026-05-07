@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.errors.exceptions import StructureEmptyError, ValidationError
+from app.serializers.react_flow_serializer import serialize_queue
 from app.structures.queue import Queue
 
 
@@ -118,12 +119,15 @@ class QueueService:
 
     def _build_result(self) -> dict[str, Any]:
         items = self._queue.to_list()
+        visualization = serialize_queue(items)
         return {
             "items": items,
             "size": self._queue.size(),
             "front": items[0] if items else None,
             "rear": items[-1] if items else None,
             "isEmpty": self._queue.is_empty(),
+            "nodes": visualization["nodes"],
+            "edges": visualization["edges"],
         }
 
     @staticmethod

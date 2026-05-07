@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 
+from app.serializers.metrics_serializer import create_metrics
 from app.serializers.response_serializer import success_response
 from app.services.queue_service import QueueService
 
@@ -18,14 +19,18 @@ def _payload_value():
 
 
 def _metrics(result):
-    return {
-        "count": result.get("size", 0),
-        "height": None,
-        "balanceFactor": None,
-        "collisions": None,
-        "levels": None,
-        "edgesCount": 0
-    }
+    return create_metrics(
+        count=result.get("size", 0),
+        edges_count=len(result.get("edges", [])),
+    )
+
+
+def _nodes(result):
+    return result.get("nodes", [])
+
+
+def _edges(result):
+    return result.get("edges", [])
 
 
 @queue_bp.route("/state", methods=["GET"])
@@ -35,8 +40,10 @@ def get_state():
         message="Estado de la cola obtenido correctamente.",
         structure="queue",
         operation="state",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -48,8 +55,10 @@ def insert():
         message="Elemento encolado correctamente.",
         structure="queue",
         operation="enqueue",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 201
 
@@ -61,8 +70,10 @@ def delete():
         message="Elemento desencolado correctamente.",
         structure="queue",
         operation="dequeue",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -74,8 +85,10 @@ def search():
         message="Búsqueda ejecutada correctamente en la cola.",
         structure="queue",
         operation="search",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -87,8 +100,10 @@ def front():
         message="Frente de la cola obtenido correctamente.",
         structure="queue",
         operation="front",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -100,8 +115,10 @@ def load_demo():
         message="Dataset demo cargado correctamente en la cola.",
         structure="queue",
         operation="demo-load",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -113,9 +130,11 @@ def traverse():
         message="Recorrido de cola obtenido correctamente.",
         structure="queue",
         operation="traverse",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
         traversal=result.get("traversal"),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -127,7 +146,9 @@ def reset():
         message="Cola reiniciada correctamente.",
         structure="queue",
         operation="reset",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200

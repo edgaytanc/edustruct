@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 
+from app.serializers.metrics_serializer import create_metrics
 from app.serializers.response_serializer import success_response
 from app.services.list_service import ListService
 
@@ -18,14 +19,18 @@ def _payload_value():
 
 
 def _metrics(result):
-    return {
-        "count": result.get("size", 0),
-        "height": None,
-        "balanceFactor": None,
-        "collisions": None,
-        "levels": None,
-        "edgesCount": 0
-    }
+    return create_metrics(
+        count=result.get("size", 0),
+        edges_count=len(result.get("edges", [])),
+    )
+
+
+def _nodes(result):
+    return result.get("nodes", [])
+
+
+def _edges(result):
+    return result.get("edges", [])
 
 
 @list_structure_bp.route("/state", methods=["GET"])
@@ -35,8 +40,10 @@ def get_state():
         message="Estado de la lista obtenido correctamente.",
         structure="list",
         operation="state",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -52,8 +59,10 @@ def insert():
         message="Elemento insertado correctamente en la lista.",
         structure="list",
         operation="insert",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 201
 
@@ -65,8 +74,10 @@ def delete():
         message="Elemento eliminado correctamente de la lista.",
         structure="list",
         operation="delete",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -78,8 +89,10 @@ def search():
         message="Búsqueda ejecutada correctamente en la lista.",
         structure="list",
         operation="search",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -91,8 +104,10 @@ def load_demo():
         message="Dataset demo cargado correctamente en la lista.",
         structure="list",
         operation="demo-load",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -104,9 +119,11 @@ def traverse():
         message="Recorrido lineal obtenido correctamente.",
         structure="list",
         operation="traverse",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
         traversal=result.get("traversal"),
-        result=result
+        result=result,
     )
     return jsonify(response), 200
 
@@ -118,7 +135,9 @@ def reset():
         message="Lista reiniciada correctamente.",
         structure="list",
         operation="reset",
+        nodes=_nodes(result),
+        edges=_edges(result),
         metrics=_metrics(result),
-        result=result
+        result=result,
     )
     return jsonify(response), 200

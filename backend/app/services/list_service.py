@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.errors.exceptions import NotFoundError, ValidationError
+from app.serializers.react_flow_serializer import serialize_linked_list
 from app.structures.list_model import LinkedList
 
 
@@ -76,14 +77,15 @@ class ListService:
 
     def traverse(self) -> dict[str, Any]:
         """Return the traversal order from head to tail."""
+        items = self._list.to_list()
         result = self._build_result()
         result["traversal"] = {
             "type": "linear",
             "start": "head",
-            "order": self._list.to_list(),
+            "order": items,
             "steps": [
                 {"index": index, "value": value}
-                for index, value in enumerate(self._list.to_list())
+                for index, value in enumerate(items)
             ],
         }
         return result
@@ -114,12 +116,15 @@ class ListService:
 
     def _build_result(self) -> dict[str, Any]:
         items = self._list.to_list()
+        visualization = serialize_linked_list(items)
         return {
             "items": items,
             "size": self._list.size(),
             "head": items[0] if items else None,
             "tail": items[-1] if items else None,
             "isEmpty": self._list.is_empty(),
+            "nodes": visualization["nodes"],
+            "edges": visualization["edges"],
         }
 
     @staticmethod
