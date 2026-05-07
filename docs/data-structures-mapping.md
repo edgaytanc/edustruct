@@ -396,3 +396,278 @@ Cada estructura deberá exponerse mediante endpoints REST.
 El mapeo formal de estructuras de datos para EduStruct establece una base sólida para la implementación técnica.
 
 Cada estructura tiene una aplicación natural dentro del contexto educativo y permite demostrar conceptos fundamentales de Programación III mediante una aplicación visual, interactiva y justificable.
+
+---
+
+# Anexo Épica 4 — Implementación Real de Estructuras Lineales
+
+Este anexo complementa el mapeo formal original con la implementación concreta realizada durante la Épica 4.
+
+La finalidad es documentar cómo las estructuras lineales base se aplican actualmente en EduStruct, cómo se visualizan y cómo quedan preparadas para futuras épicas.
+
+---
+
+## A. Lista Enlazada — Implementación Real
+
+### Aplicación concreta
+
+La lista representa estudiantes inscritos en un curso universitario.
+
+Caso educativo:
+
+```text
+Curso: Programación III
+HEAD → 2024001 - Ana López → 2024002 - Carlos Méndez → 2024003 - Sofía Ramírez → TAIL
+```
+
+### Implementación técnica
+
+La estructura se implementa manualmente en Python puro mediante una lista enlazada simplemente.
+
+Archivo principal:
+
+```text
+backend/app/structures/list_model.py
+```
+
+### Responsabilidad
+
+- Mantener una colección ordenada de elementos.
+- Insertar al inicio o al final.
+- Eliminar por valor.
+- Buscar por valor.
+- Recorrer de `head` a `tail`.
+- Servir como base reutilizable para pila y cola.
+
+### Operaciones implementadas
+
+| Operación | Descripción | Complejidad |
+|---|---|---:|
+| `prepend` | Inserta al inicio | O(1) |
+| `append` | Inserta al final | O(1) |
+| `remove` | Elimina el primer valor coincidente | O(n) |
+| `find` | Busca un valor | O(n) |
+| `to_list` | Convierte a lista serializable | O(n) |
+| `clear` | Limpia la estructura | O(1) |
+| `size` | Devuelve cantidad de elementos | O(1) |
+
+### Endpoints disponibles
+
+```text
+GET    /api/list/state
+POST   /api/list/insert
+DELETE /api/list/delete
+GET    /api/list/search?value=...
+POST   /api/list/demo/load
+GET    /api/list/traverse
+POST   /api/list/reset
+```
+
+### Payload de inserción
+
+```json
+{
+  "value": "2024001 - Ana López",
+  "position": "tail"
+}
+```
+
+### Visualización React Flow
+
+La lista se serializa horizontalmente:
+
+```text
+HEAD → Nodo 1 → Nodo 2 → Nodo 3 → TAIL
+```
+
+Cada nodo se entrega dentro de `data.nodes` y las relaciones `next` dentro de `data.edges`.
+
+---
+
+## B. Pila — Implementación Real
+
+### Aplicación concreta
+
+La pila representa historial académico o historial de navegación dentro del sistema.
+
+Caso educativo:
+
+```text
+TOP
+ ↓
+Curso MAT101
+ ↓
+Pensum
+ ↓
+Dashboard
+```
+
+### Implementación técnica
+
+La pila se implementa manualmente en Python puro reutilizando la lista enlazada.
+
+Archivo principal:
+
+```text
+backend/app/structures/stack.py
+```
+
+### Responsabilidad
+
+- Registrar acciones recientes.
+- Consultar el último elemento agregado.
+- Deshacer o retirar la acción más reciente.
+- Servir como base futura para recorridos tipo DFS y manejo de historial.
+
+### Operaciones implementadas
+
+| Operación | Descripción | Complejidad |
+|---|---|---:|
+| `push` | Agrega al tope | O(1) |
+| `pop` | Retira el tope | O(1) |
+| `peek` | Consulta el tope sin retirarlo | O(1) |
+| `to_list` | Devuelve elementos de top a bottom | O(n) |
+| `clear` | Limpia la pila | O(1) |
+| `size` | Devuelve cantidad de elementos | O(1) |
+
+### Endpoints disponibles
+
+```text
+GET    /api/stack/state
+POST   /api/stack/insert
+DELETE /api/stack/delete
+GET    /api/stack/search?value=...
+GET    /api/stack/peek
+POST   /api/stack/demo/load
+GET    /api/stack/traverse
+POST   /api/stack/reset
+```
+
+### Payload de inserción
+
+```json
+{
+  "value": "Curso MAT101"
+}
+```
+
+### Visualización React Flow
+
+La pila se serializa verticalmente:
+
+```text
+TOP
+ ↓
+Nodo 1
+ ↓
+Nodo 2
+ ↓
+Nodo 3
+```
+
+El primer nodo representa el tope.
+
+---
+
+## C. Cola — Implementación Real
+
+### Aplicación concreta
+
+La cola representa turnos de asesoría académica.
+
+Caso educativo:
+
+```text
+FRONT → Turno 1 - Ana López → Turno 2 - Carlos Méndez → Turno 3 - Sofía Ramírez → REAR
+```
+
+### Implementación técnica
+
+La cola se implementa manualmente en Python puro reutilizando la lista enlazada.
+
+Archivo principal:
+
+```text
+backend/app/structures/queue.py
+```
+
+### Responsabilidad
+
+- Registrar turnos en orden de llegada.
+- Atender el primer turno pendiente.
+- Consultar el frente de la cola.
+- Servir como base futura para recorridos BFS.
+
+### Operaciones implementadas
+
+| Operación | Descripción | Complejidad |
+|---|---|---:|
+| `enqueue` | Agrega al final | O(1) |
+| `dequeue` | Retira del frente | O(1) |
+| `front` | Consulta el frente sin retirarlo | O(1) |
+| `to_list` | Devuelve elementos de front a rear | O(n) |
+| `clear` | Limpia la cola | O(1) |
+| `size` | Devuelve cantidad de elementos | O(1) |
+
+### Endpoints disponibles
+
+```text
+GET    /api/queue/state
+POST   /api/queue/insert
+DELETE /api/queue/delete
+GET    /api/queue/search?value=...
+GET    /api/queue/front
+POST   /api/queue/demo/load
+GET    /api/queue/traverse
+POST   /api/queue/reset
+```
+
+### Payload de inserción
+
+```json
+{
+  "value": "Turno 1 - Ana López"
+}
+```
+
+### Visualización React Flow
+
+La cola se serializa horizontalmente:
+
+```text
+FRONT → Nodo 1 → Nodo 2 → Nodo 3 → REAR
+```
+
+El primer nodo representa el frente y el último representa el final de la cola.
+
+---
+
+## D. Relación de Estructuras Lineales con Futuras Épicas
+
+Las estructuras lineales implementadas en esta épica preparan el backend para:
+
+| Futuro uso | Estructura base |
+|---|---|
+| DFS | Pila |
+| BFS | Cola |
+| Historial de navegación | Pila |
+| Turnos académicos | Cola |
+| Colisiones en hash por encadenamiento | Lista |
+| Recorridos animados | Lista, pila y cola |
+| Serialización React Flow | Todas |
+
+---
+
+## E. Criterios de Aceptación Cubiertos
+
+| Criterio | Estado |
+|---|---|
+| Lista implementada manualmente | Cumplido |
+| Pila implementada manualmente | Cumplido |
+| Cola implementada manualmente | Cumplido |
+| Sin librerías mágicas | Cumplido |
+| Pruebas unitarias básicas | Cumplido |
+| Reutilización desde otros módulos | Cumplido |
+| Código desacoplado | Cumplido |
+| Preparado para estructuras complejas | Cumplido |
+

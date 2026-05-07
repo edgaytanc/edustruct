@@ -659,3 +659,539 @@ Este contrato cumple con:
 - El frontend sabe qué esperar.
 - La serialización es consistente.
 - La arquitectura queda lista para implementación en Épica 4.
+
+---
+
+# Anexo Épica 4 — Contratos Reales para Estructuras Lineales
+
+Este anexo complementa los contratos generales definidos en la Épica 3 con los endpoints reales implementados para lista, pila y cola durante la Épica 4.
+
+La convención general del contrato se mantiene. La diferencia principal es que estas estructuras lineales usan el campo `value` como dato principal, porque no requieren clave única obligatoria en esta etapa.
+
+---
+
+## 24. Consideración sobre `key` y `value` en estructuras lineales
+
+El contrato general define `key` como identificador estándar para estructuras futuras como AVL, árbol B/B+, hash y grafos.
+
+Para las estructuras lineales de Épica 4, el backend trabaja principalmente con:
+
+```json
+{
+  "value": "dato educativo"
+}
+```
+
+Motivo:
+
+- Lista, pila y cola son estructuras secuenciales.
+- No requieren clave única obligatoria.
+- El orden de inserción es parte del comportamiento.
+- El frontend puede representar cada elemento como nodo visual usando índices internos.
+
+Cuando se implementen estructuras indexadas, se retomará el uso fuerte de `key`.
+
+---
+
+## 25. Endpoints reales — Lista
+
+### Obtener estado
+
+```http
+GET /api/list/state
+```
+
+Respuesta exitosa:
+
+```json
+{
+  "success": true,
+  "message": "Estado de la lista obtenido correctamente.",
+  "data": {
+    "structure": "list",
+    "operation": "state",
+    "nodes": [],
+    "edges": [],
+    "metrics": {
+      "count": 0,
+      "height": null,
+      "balanceFactor": null,
+      "collisions": null,
+      "levels": null,
+      "edgesCount": 0
+    },
+    "traversal": {
+      "type": null,
+      "start": null,
+      "order": [],
+      "steps": []
+    },
+    "result": {
+      "items": [],
+      "size": 0,
+      "head": null,
+      "tail": null,
+      "isEmpty": true,
+      "nodes": [],
+      "edges": []
+    }
+  },
+  "error": null
+}
+```
+
+### Insertar elemento
+
+```http
+POST /api/list/insert
+```
+
+Payload:
+
+```json
+{
+  "value": "2024001 - Ana López",
+  "position": "tail"
+}
+```
+
+Campos:
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---:|---|
+| `value` | any | Sí | Valor que se insertará en la lista |
+| `position` | string | No | `head` o `tail`. Por defecto: `tail` |
+
+Respuesta parcial esperada:
+
+```json
+{
+  "success": true,
+  "message": "Elemento insertado correctamente en la lista.",
+  "data": {
+    "structure": "list",
+    "operation": "insert",
+    "nodes": [
+      {
+        "id": "list-node-0",
+        "type": "default",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "label": "2024001 - Ana López",
+          "category": "head tail item",
+          "metadata": {
+            "index": 0,
+            "role": "HEAD/TAIL"
+          }
+        }
+      }
+    ],
+    "edges": [],
+    "metrics": {
+      "count": 1,
+      "height": null,
+      "balanceFactor": null,
+      "collisions": null,
+      "levels": null,
+      "edgesCount": 0
+    },
+    "result": {
+      "items": ["2024001 - Ana López"],
+      "size": 1,
+      "head": "2024001 - Ana López",
+      "tail": "2024001 - Ana López",
+      "isEmpty": false,
+      "inserted": "2024001 - Ana López",
+      "position": "tail"
+    }
+  },
+  "error": null
+}
+```
+
+### Eliminar elemento
+
+```http
+DELETE /api/list/delete
+```
+
+Payload:
+
+```json
+{
+  "value": "2024001 - Ana López"
+}
+```
+
+### Buscar elemento
+
+```http
+GET /api/list/search?value=2024001%20-%20Ana%20López
+```
+
+### Recorrer lista
+
+```http
+GET /api/list/traverse
+```
+
+Tipo de recorrido devuelto:
+
+```text
+linear
+```
+
+### Cargar demo
+
+```http
+POST /api/list/demo/load
+```
+
+Contexto demo:
+
+```text
+Lista de estudiantes inscritos
+```
+
+---
+
+## 26. Endpoints reales — Pila
+
+### Obtener estado
+
+```http
+GET /api/stack/state
+```
+
+### Apilar elemento
+
+```http
+POST /api/stack/insert
+```
+
+Payload:
+
+```json
+{
+  "value": "Curso MAT101"
+}
+```
+
+Respuesta parcial esperada:
+
+```json
+{
+  "success": true,
+  "message": "Elemento apilado correctamente.",
+  "data": {
+    "structure": "stack",
+    "operation": "push",
+    "nodes": [
+      {
+        "id": "stack-node-0",
+        "type": "default",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "label": "Curso MAT101",
+          "category": "top item",
+          "metadata": {
+            "indexFromTop": 0,
+            "role": "TOP"
+          }
+        }
+      }
+    ],
+    "edges": [],
+    "metrics": {
+      "count": 1,
+      "height": null,
+      "balanceFactor": null,
+      "collisions": null,
+      "levels": null,
+      "edgesCount": 0
+    },
+    "result": {
+      "items": ["Curso MAT101"],
+      "size": 1,
+      "top": "Curso MAT101",
+      "isEmpty": false,
+      "pushed": "Curso MAT101"
+    }
+  },
+  "error": null
+}
+```
+
+### Desapilar elemento
+
+```http
+DELETE /api/stack/delete
+```
+
+No requiere payload. Retira el elemento ubicado en el tope.
+
+### Consultar tope
+
+```http
+GET /api/stack/peek
+```
+
+### Buscar elemento
+
+```http
+GET /api/stack/search?value=Curso%20MAT101
+```
+
+### Recorrer pila
+
+```http
+GET /api/stack/traverse
+```
+
+Tipo de recorrido devuelto:
+
+```text
+stack-top-to-bottom
+```
+
+### Cargar demo
+
+```http
+POST /api/stack/demo/load
+```
+
+Contexto demo:
+
+```text
+Historial de navegación académica
+```
+
+---
+
+## 27. Endpoints reales — Cola
+
+### Obtener estado
+
+```http
+GET /api/queue/state
+```
+
+### Encolar elemento
+
+```http
+POST /api/queue/insert
+```
+
+Payload:
+
+```json
+{
+  "value": "Turno 1 - Ana López"
+}
+```
+
+Respuesta parcial esperada:
+
+```json
+{
+  "success": true,
+  "message": "Elemento encolado correctamente.",
+  "data": {
+    "structure": "queue",
+    "operation": "enqueue",
+    "nodes": [
+      {
+        "id": "queue-node-0",
+        "type": "default",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "label": "Turno 1 - Ana López",
+          "category": "front rear item",
+          "metadata": {
+            "indexFromFront": 0,
+            "role": "FRONT/REAR"
+          }
+        }
+      }
+    ],
+    "edges": [],
+    "metrics": {
+      "count": 1,
+      "height": null,
+      "balanceFactor": null,
+      "collisions": null,
+      "levels": null,
+      "edgesCount": 0
+    },
+    "result": {
+      "items": ["Turno 1 - Ana López"],
+      "size": 1,
+      "front": "Turno 1 - Ana López",
+      "rear": "Turno 1 - Ana López",
+      "isEmpty": false,
+      "enqueued": "Turno 1 - Ana López"
+    }
+  },
+  "error": null
+}
+```
+
+### Desencolar elemento
+
+```http
+DELETE /api/queue/delete
+```
+
+No requiere payload. Retira el elemento ubicado en el frente.
+
+### Consultar frente
+
+```http
+GET /api/queue/front
+```
+
+### Buscar elemento
+
+```http
+GET /api/queue/search?value=Turno%201%20-%20Ana%20López
+```
+
+### Recorrer cola
+
+```http
+GET /api/queue/traverse
+```
+
+Tipo de recorrido devuelto:
+
+```text
+queue-front-to-rear
+```
+
+### Cargar demo
+
+```http
+POST /api/queue/demo/load
+```
+
+Contexto demo:
+
+```text
+Cola de turnos de asesoría académica
+```
+
+---
+
+## 28. Serialización React Flow para estructuras lineales
+
+Las estructuras lineales ya devuelven `nodes` y `edges` listos para React Flow.
+
+### Lista
+
+Layout horizontal:
+
+```text
+HEAD → item → item → TAIL
+```
+
+Relación de aristas:
+
+```text
+next
+```
+
+### Pila
+
+Layout vertical:
+
+```text
+TOP
+ ↓
+item
+ ↓
+item
+```
+
+Relación de aristas:
+
+```text
+below
+```
+
+### Cola
+
+Layout horizontal:
+
+```text
+FRONT → item → item → REAR
+```
+
+Relación de aristas:
+
+```text
+next
+```
+
+---
+
+## 29. Consumo frontend recomendado para estructuras lineales
+
+El frontend debe leer:
+
+```text
+data.nodes
+data.edges
+data.metrics
+data.traversal
+data.result
+```
+
+Uso sugerido:
+
+| Campo | Uso |
+|---|---|
+| `data.nodes` | Renderizar nodos en React Flow |
+| `data.edges` | Renderizar conexiones |
+| `data.metrics.count` | Mostrar cantidad de elementos |
+| `data.metrics.edgesCount` | Mostrar cantidad de conexiones |
+| `data.traversal.steps` | Animar recorridos |
+| `data.result.items` | Mostrar panel textual educativo |
+
+---
+
+## 30. Git workflow para cierre de Épica 4
+
+Rama de trabajo:
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/epic-4-linear-structures
+```
+
+Commit recomendado para documentación:
+
+```bash
+git add docs/data-structures-mapping.md docs/api-contracts.md docs/epic-4-summary.md
+git commit -m "docs(epic-4): add educational examples and api usage"
+```
+
+Cierre de rama:
+
+```bash
+git checkout develop
+git pull origin develop
+git merge feature/epic-4-linear-structures
+git push origin develop
+git branch -d feature/epic-4-linear-structures
+git push origin --delete feature/epic-4-linear-structures
+```
