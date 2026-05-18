@@ -36,7 +36,7 @@ const HomePage = () => {
           datos aplicadas al contexto educativo.
         </p>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 lg:grid-cols-4">
           <article className="rounded-xl border border-cyan-700 bg-gray-900 p-4">
             <h3 className="text-lg font-medium text-cyan-400">
               Estado de conexión con el backend
@@ -98,6 +98,24 @@ const HomePage = () => {
               className="mt-5 inline-flex rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-500"
             >
               Abrir árbol binario
+            </Link>
+          </article>
+
+          <article className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+            <h3 className="text-lg font-medium text-white">
+              Épica 7 — Árbol AVL
+            </h3>
+
+            <p className="mt-3 text-gray-300">
+              Visualiza inserciones y eliminaciones balanceadas con alturas,
+              factores de balance y rotaciones LL, RR, LR y RL.
+            </p>
+
+            <Link
+              to="/avl"
+              className="mt-5 inline-flex rounded-xl bg-teal-600 px-4 py-2 font-semibold text-white transition hover:bg-teal-500"
+            >
+              Abrir árbol AVL
             </Link>
           </article>
         </div>
