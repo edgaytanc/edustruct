@@ -1,22 +1,24 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const getTreeEndpoint = (path) => `${API_URL}/tree${path}`;
 
+const extractResponseData = (response) => response.data;
+
 export const getGeneralTreeState = async () => {
   const response = await axios.get(getTreeEndpoint("/state"));
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const loadGeneralTreeDemo = async () => {
   const response = await axios.post(getTreeEndpoint("/demo/load"));
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const resetGeneralTree = async () => {
   const response = await axios.post(getTreeEndpoint("/reset"));
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const insertGeneralTreeNode = async ({
@@ -33,26 +35,31 @@ export const insertGeneralTreeNode = async ({
     category,
     metadata,
   });
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const deleteGeneralTreeNode = async (id) => {
   const response = await axios.delete(getTreeEndpoint("/delete"), {
     data: { id },
   });
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const searchGeneralTreeNode = async (id) => {
   const response = await axios.get(getTreeEndpoint("/search"), {
     params: { id },
   });
-  return response.data;
+  return extractResponseData(response);
 };
 
 export const traverseGeneralTree = async (type = "levelorder") => {
   const response = await axios.get(getTreeEndpoint("/traverse"), {
     params: { type },
   });
-  return response.data;
+  return extractResponseData(response);
+};
+
+export const getGeneralTreeMetrics = async () => {
+  const response = await axios.get(getTreeEndpoint("/metrics"));
+  return extractResponseData(response);
 };
