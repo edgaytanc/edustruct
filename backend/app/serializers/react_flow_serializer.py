@@ -262,3 +262,65 @@ def _linear_item_category(index: int, total: int, first: str, last: str) -> str:
         return last
 
     return "item"
+
+
+def serialize_general_tree(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """
+    Serialize a general tree levelorder list into React Flow nodes and edges.
+
+    Expected item contract:
+    - id: unique node id
+    - label: visual label
+    - category: faculty, career, cycle, course, etc.
+    - level: zero-based visual level
+    - parentId: optional parent id
+    - metadata: optional extra data
+    """
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    level_counters: dict[int, int] = {}
+
+    for item in items:
+        level = int(item.get("level", 0))
+        index_in_level = level_counters.get(level, 0)
+        level_counters[level] = index_in_level + 1
+
+        x = BASE_X + (index_in_level * HORIZONTAL_GAP)
+        y = BASE_Y + (level * VERTICAL_GAP)
+
+        node_id = item["id"]
+        category = item.get("category", "academic")
+        metadata = dict(item.get("metadata") or {})
+        metadata.update(
+            {
+                "level": level,
+                "parentId": item.get("parentId"),
+                "childrenCount": item.get("childrenCount", 0),
+            }
+        )
+
+        nodes.append(
+            create_react_flow_node(
+                node_id=node_id,
+                label=item.get("label", node_id),
+                x=x,
+                y=y,
+                category=category,
+                metadata=metadata,
+            )
+        )
+
+        parent_id = item.get("parentId")
+        if parent_id:
+            edges.append(
+                create_react_flow_edge(
+                    edge_id=f"tree-edge-{parent_id}-{node_id}",
+                    source=parent_id,
+                    target=node_id,
+                    edge_type="smoothstep",
+                    animated=False,
+                    relationship="parent-child",
+                )
+            )
+
+    return {"nodes": nodes, "edges": edges}
