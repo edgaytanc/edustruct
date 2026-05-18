@@ -36,7 +36,7 @@ const HomePage = () => {
           datos aplicadas al contexto educativo.
         </p>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
           <article className="rounded-xl border border-cyan-700 bg-gray-900 p-4">
             <h3 className="text-lg font-medium text-cyan-400">
               Estado de conexión con el backend
@@ -80,6 +80,24 @@ const HomePage = () => {
               className="mt-5 inline-flex rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white transition hover:bg-cyan-500"
             >
               Abrir árbol general
+            </Link>
+          </article>
+
+          <article className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+            <h3 className="text-lg font-medium text-white">
+              Épica 6 — Árbol Binario
+            </h3>
+
+            <p className="mt-3 text-gray-300">
+              Inserta, busca, elimina y recorre un BST académico con visualización
+              React Flow y métricas estructurales.
+            </p>
+
+            <Link
+              to="/binary-tree"
+              className="mt-5 inline-flex rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-500"
+            >
+              Abrir árbol binario
             </Link>
           </article>
         </div>
