@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from app.errors.exceptions import DuplicateKeyError, NotFoundError, StructureEmptyError, ValidationError
+from app.serializers.react_flow_serializer import serialize_binary_tree
 from app.structures.binary_tree import BinaryTree, BinaryTreeNode
 
 
@@ -134,43 +135,28 @@ class BinaryTreeService:
         return result
 
     def _build_result(self) -> dict[str, Any]:
-        nodes = self._tree.levelorder()
+        traversal_items = self._tree.levelorder()
+        visualization = serialize_binary_tree(traversal_items)
         return {
             "tree": self._tree.to_dict(),
             "size": self._tree.size(),
             "root": self._node_to_result(self._tree.root) if self._tree.root else None,
             "isEmpty": self._tree.is_empty(),
-            "nodes": nodes,
-            "edges": self._build_plain_edges(nodes),
-            "metrics": self._build_metrics(),
+            "nodes": visualization["nodes"],
+            "edges": visualization["edges"],
+            "metrics": self._build_metrics(edges_count=len(visualization["edges"])),
         }
 
-    def _build_metrics(self) -> dict[str, Any]:
+    def _build_metrics(self, edges_count: int) -> dict[str, Any]:
         return {
             "count": self._tree.size(),
             "height": self._tree.height(),
             "balanceFactor": self._tree.balance_factor(),
             "collisions": None,
             "levels": self._tree.levels_count(),
-            "edgesCount": self._tree.edges_count(),
+            "edgesCount": edges_count,
             "leafCount": self._tree.leaf_count(),
         }
-
-    @staticmethod
-    def _build_plain_edges(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        edges: list[dict[str, Any]] = []
-        for node in nodes:
-            parent_id = node.get("parentId")
-            if parent_id is not None:
-                edges.append(
-                    {
-                        "id": f"binary-tree-edge-{parent_id}-{node['id']}",
-                        "source": parent_id,
-                        "target": node["id"],
-                        "relationship": node.get("direction"),
-                    }
-                )
-        return edges
 
     @staticmethod
     def _node_to_result(node: Optional[BinaryTreeNode]) -> Optional[dict[str, Any]]:
