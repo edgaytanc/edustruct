@@ -324,3 +324,212 @@ def serialize_general_tree(items: list[dict[str, Any]]) -> dict[str, list[dict[s
             )
 
     return {"nodes": nodes, "edges": edges}
+
+
+def serialize_binary_tree(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """
+    Serialize a binary tree levelorder list into React Flow nodes and edges.
+
+    Expected item contract:
+    - id: unique node id, usually str(value)
+    - label: visual label
+    - value: original comparable value
+    - level: zero-based visual level
+    - parentId: optional parent node id
+    - direction: optional left/right relationship from parent
+    - hasLeft / hasRight / childrenCount: optional structural metadata
+
+    The layout keeps the root centered and separates children horizontally by
+    level, producing a deterministic hierarchy suitable for React Flow.
+    """
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+
+    if not items:
+        return {"nodes": nodes, "edges": edges}
+
+    max_level = 0
+    for item in items:
+        level = int(item.get("level", 0))
+        if level > max_level:
+            max_level = level
+
+    for item in items:
+        level = int(item.get("level", 0))
+        direction = item.get("direction")
+        node_id = str(item["id"])
+        parent_id = item.get("parentId")
+
+        x = _binary_tree_x_position(item=item, max_level=max_level)
+        y = BASE_Y + (level * VERTICAL_GAP)
+
+        metadata = dict(item.get("metadata") or {})
+        metadata.update(
+            {
+                "value": item.get("value"),
+                "level": level,
+                "parentId": parent_id,
+                "parentValue": item.get("parentValue"),
+                "direction": direction,
+                "hasLeft": item.get("hasLeft", False),
+                "hasRight": item.get("hasRight", False),
+                "childrenCount": item.get("childrenCount", 0),
+            }
+        )
+
+        category = "root" if parent_id is None else direction or "child"
+        nodes.append(
+            create_react_flow_node(
+                node_id=node_id,
+                label=item.get("label", node_id),
+                x=x,
+                y=y,
+                category=category,
+                metadata=metadata,
+            )
+        )
+
+        if parent_id is not None:
+            edges.append(
+                create_react_flow_edge(
+                    edge_id=f"binary-tree-edge-{parent_id}-{node_id}",
+                    source=parent_id,
+                    target=node_id,
+                    edge_type="smoothstep",
+                    label=direction,
+                    animated=False,
+                    relationship=direction,
+                )
+            )
+
+    return {"nodes": nodes, "edges": edges}
+
+
+def _binary_tree_x_position(item: dict[str, Any], max_level: int) -> int:
+    """Return deterministic horizontal position from BST path metadata."""
+    level = int(item.get("level", 0))
+    path = _binary_tree_path_code(item)
+    remaining_depth = max(max_level - level, 0)
+    slot_width = HORIZONTAL_GAP * (2 ** remaining_depth)
+    offset = 0
+
+    for index, direction in enumerate(path):
+        depth_from_node = len(path) - index - 1
+        step = HORIZONTAL_GAP * (2 ** depth_from_node)
+        offset += -step if direction == "left" else step
+
+    if level == 0:
+        return BASE_X
+
+    return BASE_X + (offset * max(slot_width // HORIZONTAL_GAP, 1))
+
+
+def _binary_tree_path_code(item: dict[str, Any]) -> list[str]:
+    """
+    Build a best-effort path code for a levelorder binary-tree item.
+
+    The BinaryTree structure provides only direct parent direction. To keep this
+    serializer stateless and compatible with the current contract, it accepts an
+    optional path field and falls back to repeating the direct direction by level.
+    The fallback remains deterministic and visually separates left/right sides.
+    """
+    path = item.get("path")
+    if isinstance(path, list) and all(direction in {"left", "right"} for direction in path):
+        return path
+
+    direction = item.get("direction")
+    level = int(item.get("level", 0))
+
+    if direction not in {"left", "right"} or level <= 0:
+        return []
+
+    return [direction] * level
+
+
+def serialize_avl_tree(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """
+    Serialize an AVL tree levelorder list into React Flow nodes and edges.
+
+    Extends the binary-tree visual contract with AVL metadata:
+    - height: internal one-based AVL height
+    - visualHeight: zero-based height for UI explanations
+    - balanceFactor: left subtree height minus right subtree height
+    - isUnbalanced: True when abs(balanceFactor) > 1
+
+    The function remains stateless and deterministic, matching the existing
+    binary tree serializer layout so the frontend can reuse React Flow patterns.
+    """
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+
+    if not items:
+        return {"nodes": nodes, "edges": edges}
+
+    max_level = 0
+    for item in items:
+        level = int(item.get("level", 0))
+        if level > max_level:
+            max_level = level
+
+    for item in items:
+        level = int(item.get("level", 0))
+        direction = item.get("direction")
+        node_id = str(item["id"])
+        parent_id = item.get("parentId")
+        balance_factor = item.get("balanceFactor", 0)
+        is_unbalanced = bool(item.get("isUnbalanced", abs(balance_factor) > 1))
+
+        x = _binary_tree_x_position(item=item, max_level=max_level)
+        y = BASE_Y + (level * VERTICAL_GAP)
+
+        metadata = dict(item.get("metadata") or {})
+        metadata.update(
+            {
+                "value": item.get("value"),
+                "level": level,
+                "parentId": parent_id,
+                "parentValue": item.get("parentValue"),
+                "direction": direction,
+                "hasLeft": item.get("hasLeft", False),
+                "hasRight": item.get("hasRight", False),
+                "childrenCount": item.get("childrenCount", 0),
+                "height": item.get("height", 1),
+                "visualHeight": item.get("visualHeight", max(item.get("height", 1) - 1, 0)),
+                "balanceFactor": balance_factor,
+                "isUnbalanced": is_unbalanced,
+                "structure": "avl-tree",
+            }
+        )
+
+        if parent_id is None:
+            category = "root"
+        elif is_unbalanced:
+            category = "unbalanced"
+        else:
+            category = direction or "child"
+
+        nodes.append(
+            create_react_flow_node(
+                node_id=node_id,
+                label=item.get("label", node_id),
+                x=x,
+                y=y,
+                category=category,
+                metadata=metadata,
+            )
+        )
+
+        if parent_id is not None:
+            edges.append(
+                create_react_flow_edge(
+                    edge_id=f"avl-tree-edge-{parent_id}-{node_id}",
+                    source=parent_id,
+                    target=node_id,
+                    edge_type="smoothstep",
+                    label=direction,
+                    animated=False,
+                    relationship=direction,
+                )
+            )
+
+    return {"nodes": nodes, "edges": edges}
