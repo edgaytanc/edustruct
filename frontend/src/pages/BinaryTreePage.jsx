@@ -26,6 +26,12 @@ const traversalOptions = [
   { value: "postorder", label: "Postorder" },
 ];
 
+const animationSpeedOptions = [
+  { value: 1200, label: "Lenta" },
+  { value: 750, label: "Normal" },
+  { value: 400, label: "Rápida" },
+];
+
 const getPayload = (response) => response?.data || {};
 
 const getApiErrorMessage = (error) => {
@@ -172,6 +178,10 @@ const BinaryTreePage = () => {
   const [highlightedId, setHighlightedId] = useState("");
   const [traversalType, setTraversalType] = useState("levelorder");
   const [traversal, setTraversal] = useState(null);
+  const [activeTraversalOrder, setActiveTraversalOrder] = useState([]);
+  const [currentTraversalIndex, setCurrentTraversalIndex] = useState(-1);
+  const [isAnimatingTraversal, setIsAnimatingTraversal] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(750);
   const [status, setStatus] = useState({
     type: "info",
     message: "Cargando árbol binario...",
@@ -182,6 +192,22 @@ const BinaryTreePage = () => {
     () => (traversal?.order || []).map((value) => String(value)),
     [traversal],
   );
+
+  const currentTraversalNodeId = useMemo(() => {
+    if (currentTraversalIndex < 0 || currentTraversalIndex >= traversalOrder.length) {
+      return "";
+    }
+
+    return traversalOrder[currentTraversalIndex];
+  }, [currentTraversalIndex, traversalOrder]);
+
+  const traversalProgress = useMemo(() => {
+    if (traversalOrder.length === 0 || currentTraversalIndex < 0) {
+      return 0;
+    }
+
+    return Math.round(((currentTraversalIndex + 1) / traversalOrder.length) * 100);
+  }, [currentTraversalIndex, traversalOrder.length]);
 
   const applyTreePayload = useCallback(
     (payload, visualState = {}) => {
@@ -249,12 +275,48 @@ const BinaryTreePage = () => {
   useEffect(() => {
     setNodes((currentNodes) =>
       normalizeNodes(currentNodes, {
-        highlightedId,
-        traversalOrder,
+        highlightedId: currentTraversalNodeId || highlightedId,
+        traversalOrder: activeTraversalOrder,
       }),
     );
-    setEdges((currentEdges) => normalizeEdges(currentEdges, traversalOrder));
-  }, [highlightedId, setEdges, setNodes, traversalOrder]);
+    setEdges((currentEdges) => normalizeEdges(currentEdges, activeTraversalOrder));
+  }, [activeTraversalOrder, currentTraversalNodeId, highlightedId, setEdges, setNodes]);
+
+  useEffect(() => {
+    if (!isAnimatingTraversal || traversalOrder.length === 0) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setCurrentTraversalIndex((currentIndex) => {
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex >= traversalOrder.length) {
+          setIsAnimatingTraversal(false);
+          setStatus({
+            type: "success",
+            message: `Animación ${traversal?.type || traversalType} finalizada correctamente.`,
+          });
+          return currentIndex;
+        }
+
+        const nextOrder = traversalOrder.slice(0, nextIndex + 1);
+        setActiveTraversalOrder(nextOrder);
+
+        if (nextIndex === traversalOrder.length - 1) {
+          setIsAnimatingTraversal(false);
+          setStatus({
+            type: "success",
+            message: `Animación ${traversal?.type || traversalType} finalizada correctamente.`,
+          });
+        }
+
+        return nextIndex;
+      });
+    }, animationSpeed);
+
+    return () => window.clearTimeout(timerId);
+  }, [animationSpeed, isAnimatingTraversal, traversal, traversalOrder, traversalType]);
 
   const metricsCards = useMemo(
     () => [
@@ -296,6 +358,16 @@ const BinaryTreePage = () => {
   const clearVisualMarks = () => {
     setHighlightedId("");
     setTraversal(null);
+    setActiveTraversalOrder([]);
+    setCurrentTraversalIndex(-1);
+    setIsAnimatingTraversal(false);
+  };
+
+  const resetTraversalAnimation = () => {
+    setActiveTraversalOrder([]);
+    setCurrentTraversalIndex(-1);
+    setIsAnimatingTraversal(false);
+    setHighlightedId("");
   };
 
   const handleLoadDemo = () =>
@@ -347,6 +419,9 @@ const BinaryTreePage = () => {
 
       setHighlightedId(nodeId);
       setTraversal(null);
+      setActiveTraversalOrder([]);
+      setCurrentTraversalIndex(-1);
+      setIsAnimatingTraversal(false);
       applyTreePayload(payload, { highlightedId: nodeId, traversalOrder: [] });
       setInsertValue("");
       setStatus({
@@ -404,6 +479,9 @@ const BinaryTreePage = () => {
 
       setHighlightedId(nextHighlight);
       setTraversal(null);
+      setActiveTraversalOrder([]);
+      setCurrentTraversalIndex(-1);
+      setIsAnimatingTraversal(false);
       applyTreePayload(payload, { highlightedId: nextHighlight, traversalOrder: [] });
       setStatus({
         type: result.found ? "success" : "error",
@@ -419,14 +497,16 @@ const BinaryTreePage = () => {
       const response = await traverseBinaryTree(traversalType);
       const payload = getPayload(response);
       const nextTraversal = payload.traversal || payload.result?.traversal || null;
-      const nextOrder = (nextTraversal?.order || []).map((value) => String(value));
 
       setTraversal(nextTraversal);
       setHighlightedId("");
-      applyTreePayload(payload, { highlightedId: "", traversalOrder: nextOrder });
+      setActiveTraversalOrder([]);
+      setCurrentTraversalIndex(-1);
+      setIsAnimatingTraversal(Boolean(nextTraversal?.order?.length));
+      applyTreePayload(payload, { highlightedId: "", traversalOrder: [] });
       setStatus({
         type: "success",
-        message: `Recorrido ${traversalType} obtenido correctamente.`,
+        message: `Recorrido ${traversalType} listo. Iniciando animación paso a paso.`,
       });
     });
 
@@ -569,16 +649,17 @@ const BinaryTreePage = () => {
             </article>
 
             <article className="rounded-2xl border border-gray-700 bg-gray-800 p-5 shadow-lg">
-              <h3 className="text-lg font-semibold text-white">Recorridos</h3>
+              <h3 className="text-lg font-semibold text-white">Recorridos animados</h3>
               <p className="mt-2 text-sm text-gray-400">
-                Inorder muestra los valores ordenados; levelorder usa la Queue manual.
+                Inorder muestra los valores ordenados; levelorder usa la Queue manual. La animación revela cada nodo como si el árbol estuviera pasando lista.
               </p>
 
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
                 <select
                   value={traversalType}
                   onChange={(event) => setTraversalType(event.target.value)}
-                  className="min-w-0 flex-1 rounded-xl border border-gray-700 bg-gray-900 px-4 py-2 text-gray-100 outline-none focus:border-indigo-500"
+                  disabled={isAnimatingTraversal}
+                  className="min-w-0 rounded-xl border border-gray-700 bg-gray-900 px-4 py-2 text-gray-100 outline-none focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {traversalOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -590,27 +671,85 @@ const BinaryTreePage = () => {
                 <button
                   type="button"
                   onClick={handleTraversal}
-                  disabled={isLoading || !hasNodes}
+                  disabled={isLoading || !hasNodes || isAnimatingTraversal}
                   className="rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Ver
+                  Ejecutar
                 </button>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <select
+                  value={animationSpeed}
+                  onChange={(event) => setAnimationSpeed(Number(event.target.value))}
+                  className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-2 text-gray-100 outline-none focus:border-indigo-500"
+                >
+                  {animationSpeedOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      Velocidad {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAnimatingTraversal((current) => !current)}
+                    disabled={!traversal || traversalProgress >= 100}
+                    className="rounded-xl border border-indigo-700 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isAnimatingTraversal ? "Pausar" : "Continuar"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={resetTraversalAnimation}
+                    disabled={!traversal}
+                    className="rounded-xl border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Reiniciar
+                  </button>
+                </div>
               </div>
 
               {traversal && (
                 <div className="mt-4 rounded-xl border border-indigo-800 bg-indigo-950/40 p-3">
-                  <p className="text-sm font-semibold text-indigo-200">
-                    {traversal.type} desde {traversal.start ?? "N/A"}
-                  </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-indigo-200">
+                      {traversal.type} desde {traversal.start ?? "N/A"}
+                    </p>
+                    <span className="rounded-full bg-indigo-700 px-3 py-1 text-xs font-bold text-white">
+                      {traversalProgress}%
+                    </span>
+                  </div>
+
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-900">
+                    <div
+                      className="h-full rounded-full bg-indigo-500 transition-all duration-300"
+                      style={{ width: `${traversalProgress}%` }}
+                    />
+                  </div>
+
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {traversal.steps.map((step) => (
-                      <span
-                        key={`${step.step}-${step.id}`}
-                        className="rounded-full bg-indigo-700 px-3 py-1 text-xs font-semibold text-white"
-                      >
-                        {step.step}. {step.label}
-                      </span>
-                    ))}
+                    {traversal.steps.map((step, index) => {
+                      const wasVisited = index <= currentTraversalIndex;
+                      const isCurrent = index === currentTraversalIndex;
+
+                      return (
+                        <span
+                          key={`${step.step}-${step.id}`}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            isCurrent
+                              ? "bg-yellow-500 text-gray-950"
+                              : wasVisited
+                                ? "bg-indigo-700 text-white"
+                                : "bg-gray-900 text-gray-400"
+                          }`}
+                        >
+                          {step.step}. {step.label}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -629,14 +768,25 @@ const BinaryTreePage = () => {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => refreshTree({ highlightedId, traversalOrder })}
-                  disabled={isLoading}
-                  className="rounded-xl border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Refrescar
-                </button>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => refreshTree({ highlightedId: currentTraversalNodeId || highlightedId, traversalOrder: activeTraversalOrder })}
+                    disabled={isLoading}
+                    className="rounded-xl border border-gray-600 px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Refrescar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={clearVisualMarks}
+                    disabled={isLoading}
+                    className="rounded-xl border border-cyan-700 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Limpiar marcas
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 h-[620px] overflow-hidden rounded-2xl border border-gray-700 bg-gray-950">
