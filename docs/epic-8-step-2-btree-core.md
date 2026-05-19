@@ -1,150 +1,143 @@
-# Épica 8 — Step 2: Core del Árbol B
+# Épica 8 — Step 2: Backend core BTree
 
 ## Objetivo
 
-Implementar el núcleo puro del Árbol B para EduStruct, manteniendo separación estricta entre estructura de datos, servicios, rutas y frontend.
+Implementar la estructura base `BTree` en Python puro, sin dependencias externas, manteniendo separación estricta entre lógica de estructura de datos y capas HTTP, servicios, serializadores o frontend.
 
-## Decisión aplicada
+## Archivos agregados
 
-Se implementa un **Árbol B** de orden configurable. Por defecto se usa `order = 4`, lo que significa:
-
-- máximo 4 hijos por nodo;
-- máximo 3 claves por nodo;
-- al llenarse un nodo, se divide;
-- la clave mediana se promueve al padre.
-
-Esta decisión permite mostrar visualmente nodos multi-clave y splits sin agregar la complejidad adicional de enlaces entre hojas propia de un B+.
-
-## Archivo agregado
-
-`backend/app/structures/btree.py`
-
-## Clases implementadas
-
-### `BTreeNode`
-
-Responsabilidades:
-
-- almacenar múltiples claves ordenadas;
-- almacenar hijos;
-- indicar si el nodo es hoja;
-- serializarse a diccionario plano.
-
-Atributos:
-
-```python
-keys: list[Any]
-children: list[BTreeNode]
-leaf: bool
+```text
+backend/app/structures/btree.py
+backend/tests/structures/test_btree.py
+docs/epic-8-step-2-btree-core.md
 ```
 
-### `BTree`
+También se incluye el documento validado del Step 1 para mantener continuidad en la rama:
 
-Responsabilidades:
+```text
+docs/epic-8-step-1-btree-decision.md
+```
 
-- validar orden del árbol;
-- insertar claves únicas;
-- dividir nodos llenos;
-- promover clave mediana;
-- buscar claves;
-- recorrer por niveles;
-- calcular métricas base;
-- registrar metadata de splits.
+## Decisiones técnicas
+
+- Se implementa `BTree` y `BTreeNode` manualmente en Python puro.
+- El `order` representa el máximo número de hijos por nodo.
+- Cada nodo puede almacenar como máximo `order - 1` claves.
+- El orden mínimo permitido es `3`.
+- La inserción se realiza de forma recursiva y divide nodos cuando exceden el máximo de claves.
+- Los duplicados se rechazan con `DUPLICATE_KEY` para evitar identificadores visuales ambiguos.
+- Los eventos de split se registran en `split_events` para ser reutilizados por servicio, API y React Flow en steps posteriores.
+- La estructura no importa Flask, servicios, rutas ni serializadores.
+
+## Contrato base de nodo
+
+```python
+class BTreeNode:
+    keys
+    children
+    leaf
+```
+
+Cada nodo serializa a:
+
+```python
+{
+    "keys": [10, 20, 30],
+    "leaf": False,
+    "children": [...]
+}
+```
 
 ## Operaciones implementadas
 
 - `insert(key)`
 - `search(key)`
 - `contains(key)`
+- `inorder()`
 - `levelorder()`
+- `levelorder_nodes()`
 - `height()`
 - `levels_count()`
 - `node_count()`
 - `leaf_count()`
 - `edges_count()`
 - `to_dict()`
+- `validate_invariants()`
 - `clear()`
 
-## Metadata de splits
+## Split events
 
-Cada split registra:
+Cada split registra metadata pensada para visualización:
 
-```json
+```python
 {
-  "type": "split",
-  "promotedKey": 20,
-  "parentKeys": [20],
-  "childIndex": 0,
-  "before": {
-    "keys": [10, 20, 30],
-    "leaf": true,
-    "children": []
-  },
-  "after": {
-    "parent": {},
-    "left": {},
-    "right": {}
-  }
+    "type": "SPLIT",
+    "level": 1,
+    "promotedKey": 30,
+    "beforeKeys": [10, 20, 30, 40],
+    "leftKeys": [10, 20],
+    "rightKeys": [40],
+    "leaf": True,
+    "createdNewRoot": False,
+    "parentKeysAfter": [...]
 }
 ```
 
-Esta metadata queda lista para el Step 3, donde el servicio y serializer podrán exponerla al frontend.
-
-## Validaciones
-
-Se rechaza:
-
-- orden menor que 3;
-- claves vacías;
-- claves duplicadas;
-- claves incomparables.
-
 ## Pruebas agregadas
 
-`backend/tests/structures/test_btree.py`
+```text
+backend/tests/structures/test_btree.py
+```
 
-Cobertura:
+Cobertura incluida:
 
-- árbol vacío;
-- validación de orden;
-- inserción en raíz multi-clave;
-- split de raíz;
-- split de hijo interno;
-- búsqueda exitosa;
-- búsqueda fallida;
-- duplicados;
-- claves requeridas;
-- claves incomparables;
-- recorrido por niveles;
-- métricas;
-- serialización;
-- limpieza del árbol.
+- Árbol vacío.
+- Validación de orden.
+- Inserción raíz.
+- Rechazo de duplicados.
+- Rechazo de claves vacías.
+- Rechazo de claves incomparables.
+- Split de raíz.
+- Inserciones múltiples.
+- Búsqueda exitosa y fallida.
+- Metadata de recorrido por niveles.
+- Métricas.
+- Limpieza del árbol.
+- Serialización `to_dict`.
+- Validación de invariantes.
+- Orden configurable con `order=5`.
 
-## Validación ejecutada
+## Comandos de validación sugeridos
 
-Comando recomendado:
+Desde la raíz del proyecto:
 
 ```bash
 cd backend
-python -m pytest tests/structures/test_btree.py
+pytest tests/structures/test_btree.py
 ```
 
-## Workflow Git sugerido
+Validación completa recomendada antes de continuar:
+
+```bash
+cd backend
+pytest
+```
+
+## Workflow Git del step
 
 ```bash
 git checkout develop
 git pull origin develop
 git checkout -b feature/epic-8-btree
 
-git add backend/app/structures/btree.py backend/tests/structures/test_btree.py docs/epic-8-step-2-btree-core.md
-git commit -m "feat(btree): implement core btree structure"
+git add backend/app/structures/btree.py \
+        backend/tests/structures/test_btree.py \
+        docs/epic-8-step-1-btree-decision.md \
+        docs/epic-8-step-2-btree-core.md
+
+git commit -m "feat(btree): implement btree core structure"
 ```
 
 ## Siguiente step
 
-Step 3 debe crear la capa de servicio y serialización React Flow:
-
-- `backend/app/services/btree_service.py`
-- extensión de `backend/app/serializers/react_flow_serializer.py` con `serialize_btree()`
-- `backend/tests/services/test_btree_service.py`
-- `backend/tests/serializers/test_react_flow_btree_serializer.py`
+Step 3 debe integrar `BTree` con la capa de servicio y extender el serializador React Flow con soporte para nodos multi-clave.

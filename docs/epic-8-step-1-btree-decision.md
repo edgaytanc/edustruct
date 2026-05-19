@@ -1,86 +1,156 @@
 # Épica 8 — Step 1: Decisión técnica Árbol B vs Árbol B+
 
-## Objetivo del step
+## 1. Objetivo del step
 
-Definir formalmente qué variante de árbol multi-clave se implementará para EduStruct como simulación de índice académico eficiente para expedientes universitarios.
+Definir formalmente si EduStruct implementará un **Árbol B** o un **Árbol B+** para simular un índice académico eficiente de expedientes universitarios.
 
-Este step no modifica lógica de backend ni frontend. Solamente deja documentada la decisión arquitectónica antes de implementar la estructura, respetando el flujo incremental usado en las épicas anteriores.
-
----
-
-## Contexto funcional
-
-EduStruct representa estructuras de datos dentro de un contexto educativo universitario. Para la Épica 8 se necesita simular un índice eficiente de expedientes académicos, donde cada clave puede representar un identificador de expediente, carnet o código académico.
-
-La estructura debe permitir:
-
-- Insertar registros.
-- Buscar registros por clave.
-- Visualizar nodos con múltiples claves.
-- Mostrar splits durante inserciones.
-- Mostrar altura y niveles.
-- Serializar el árbol para React Flow.
-- Defender técnicamente la complejidad y el comportamiento del índice.
+Este documento cierra la decisión técnica previa a la implementación de la Épica 8 y debe validarse antes de avanzar al core backend.
 
 ---
 
-## Alternativas evaluadas
+## 2. Contexto del proyecto
 
-### Árbol B
+EduStruct es un visualizador interactivo de estructuras de datos aplicado al contexto educativo universitario.
 
-Un Árbol B almacena claves y datos asociados en nodos internos y hojas. Sus nodos pueden contener varias claves y varios hijos, manteniendo el árbol balanceado mediante divisiones de nodos cuando se excede la capacidad permitida.
+La arquitectura vigente del proyecto es:
 
-Ventajas para EduStruct:
+```text
+React + React Flow → API REST Flask → Estructuras en Python puro
+```
 
-- Es más directo de implementar y explicar en una exposición académica.
-- Permite visualizar claramente la promoción de claves durante un split.
-- Cada nodo multi-clave tiene una relación directa con el concepto de página o bloque de índice.
-- La búsqueda puede terminar en nodos internos o en hojas, lo que facilita demostrar eficiencia.
-- Encaja directamente con el requisito de simular un índice de base de datos.
+La Épica 8 debe representar un índice académico para expedientes universitarios, demostrando:
 
-Desventajas:
-
-- Para recorridos secuenciales masivos, no es tan cómodo como un Árbol B+ porque las hojas no están necesariamente enlazadas.
-
-### Árbol B+
-
-Un Árbol B+ almacena los datos completos normalmente solo en las hojas y usa los nodos internos como índice. Las hojas suelen estar enlazadas para facilitar recorridos secuenciales o consultas por rango.
-
-Ventajas para EduStruct:
-
-- Es más cercano a índices reales usados en muchos motores de bases de datos.
-- Mejora recorridos por rango gracias al enlace entre hojas.
-- Separa con claridad índice interno y datos finales.
-
-Desventajas:
-
-- Requiere más contratos visuales para distinguir nodos internos, hojas y enlaces horizontales.
-- Aumenta la complejidad del serializer y de la interfaz React Flow.
-- El objetivo actual se centra en inserción, búsqueda, niveles y splits; no exige consultas por rango ni hojas enlazadas.
-- Puede distraer en la defensa oral con detalles adicionales que no aportan directamente al criterio de aceptación.
+- búsquedas eficientes;
+- múltiples claves por nodo;
+- divisiones de nodos o `splits`;
+- crecimiento balanceado;
+- visualización clara en React Flow;
+- métricas como altura y niveles.
 
 ---
 
-## Decisión
+## 3. Requerimiento formal del curso
 
-Se implementará un **Árbol B** manual en Python puro.
+El proyecto final exige implementar un **Árbol B o B+** como una de las estructuras de datos obligatorias.
 
-La decisión se toma porque el Árbol B cubre completamente los criterios de la Épica 8 y permite una visualización más clara de:
+Dentro del contexto educativo de EduStruct, esta estructura se utilizará para simular un índice de búsqueda de expedientes académicos, donde cada clave representa un identificador de expediente.
 
-- nodos multi-clave;
-- promoción de claves;
-- split de nodos;
-- búsqueda eficiente;
-- altura del árbol;
-- recorrido por niveles.
+Ejemplo de claves:
 
-Para el alcance actual, un Árbol B es la opción más defendible y menos riesgosa. B+ sería buena opción si el sistema necesitara consultas por rango o navegación secuencial entre hojas, pero eso no forma parte del criterio mínimo de aceptación de esta épica.
+```text
+1001, 1002, 1003, 1004, 1005
+```
+
+Estas claves representan expedientes universitarios indexados para búsqueda eficiente.
 
 ---
 
-## Diseño base aprobado
+## 4. Alternativa 1: Árbol B
 
-### Nodo
+Un Árbol B es una estructura de búsqueda balanceada donde cada nodo puede almacenar múltiples claves y múltiples hijos.
+
+### Características principales
+
+- Las claves pueden estar en nodos internos y hojas.
+- Todos los nodos hoja quedan al mismo nivel.
+- Cada nodo puede contener varias claves ordenadas.
+- Las búsquedas pueden terminar en un nodo interno o en una hoja.
+- Las inserciones pueden provocar `splits` cuando un nodo excede la capacidad permitida.
+
+### Ventajas para EduStruct
+
+- Es más directo de explicar en una exposición universitaria.
+- La estructura visual es más simple que un B+.
+- Permite representar múltiples claves por nodo sin añadir enlaces horizontales entre hojas.
+- Los `splits` son fáciles de visualizar en React Flow.
+- Encaja bien con la arquitectura existente de serializadores de árboles.
+- Requiere menos complejidad accidental en frontend.
+- Facilita pruebas unitarias de invariantes.
+
+### Desventajas
+
+- No representa tan fielmente los índices modernos de bases de datos como un B+.
+- Los recorridos ordenados no son tan naturales como en B+, donde las hojas suelen estar enlazadas.
+
+---
+
+## 5. Alternativa 2: Árbol B+
+
+Un Árbol B+ es una variante del Árbol B donde los datos reales se almacenan normalmente en las hojas y los nodos internos funcionan como índices.
+
+### Características principales
+
+- Los nodos internos contienen claves guía.
+- Los registros completos viven en las hojas.
+- Las hojas suelen estar enlazadas para recorridos secuenciales.
+- Todas las búsquedas reales terminan en hojas.
+- Es común en índices de bases de datos y sistemas de archivos.
+
+### Ventajas para EduStruct
+
+- Se parece más a un índice real de base de datos.
+- Permite explicar búsquedas por rango de forma más natural.
+- Las hojas enlazadas permiten recorridos secuenciales eficientes.
+
+### Desventajas
+
+- Requiere más reglas para explicar correctamente.
+- La serialización visual es más compleja.
+- React Flow tendría que representar enlaces verticales del árbol y enlaces horizontales entre hojas.
+- Aumenta la carga de testing.
+- Puede consumir más tiempo de implementación sin aportar mucho más al criterio formal del curso.
+- Existe mayor riesgo de introducir errores si se implementa junto con visualizaciones de `splits` y niveles.
+
+---
+
+## 6. Comparación formal
+
+| Criterio | Árbol B | Árbol B+ | Mejor opción para EduStruct |
+|---|---|---|---|
+| Simplicidad pedagógica | Alta | Media | Árbol B |
+| Facilidad visual | Alta | Media | Árbol B |
+| Facilidad de implementación | Alta | Media/Baja | Árbol B |
+| Facilidad para exposición | Alta | Media | Árbol B |
+| Compatibilidad con React Flow | Alta | Media | Árbol B |
+| Tiempo de desarrollo | Menor | Mayor | Árbol B |
+| Mantenibilidad | Alta | Media | Árbol B |
+| Fidelidad a índices reales de BD | Media | Alta | Árbol B+ |
+| Búsqueda eficiente | Alta | Alta | Empate |
+| Splits visibles | Alta | Alta, pero más compleja | Árbol B |
+
+---
+
+## 7. Decisión técnica
+
+La Épica 8 implementará un **Árbol B**.
+
+No se implementará Árbol B+ en esta épica.
+
+---
+
+## 8. Justificación de la decisión
+
+Se elige **Árbol B** porque cumple completamente el requerimiento formal del curso y se adapta mejor a los objetivos actuales de EduStruct.
+
+La prioridad de esta épica no es construir un motor de base de datos real, sino demostrar correctamente los conceptos de:
+
+- nodos con múltiples claves;
+- búsqueda balanceada;
+- inserción ordenada;
+- división de nodos;
+- crecimiento de altura;
+- recorrido por niveles;
+- visualización clara para defensa oral.
+
+El Árbol B permite cubrir estos puntos con menor complejidad que un B+ y con una representación visual más limpia en React Flow.
+
+En términos prácticos: el B+ es excelente para bases de datos reales, pero para una exposición universitaria visual puede meter demasiado ruido. El Árbol B explica lo esencial sin convertir el frontend en un tablero de conspiración con flechas por todos lados.
+
+---
+
+## 9. Diseño conceptual aprobado
+
+La estructura base será:
 
 ```python
 class BTreeNode:
@@ -89,30 +159,84 @@ class BTreeNode:
     leaf
 ```
 
-### Árbol
-
 ```python
 class BTree:
     root
     order
 ```
 
-### Orden inicial recomendado
+### Orden configurable
 
-Se usará orden `4` como valor demo inicial.
+El árbol tendrá un `order` configurable.
 
-Justificación:
+Regla conceptual:
 
-- Máximo de claves por nodo: `order - 1 = 3`.
-- Máximo de hijos por nodo interno: `order = 4`.
-- Permite provocar splits con pocos datos, ideal para demostración visual.
-- Mantiene nodos suficientemente compactos para React Flow.
+- máximo de claves por nodo: `order - 1`;
+- máximo de hijos por nodo: `order`;
+- el `order` mínimo aceptado será `3`.
+
+Ejemplo:
+
+```text
+order = 4
+máximo de claves por nodo = 3
+máximo de hijos por nodo = 4
+```
 
 ---
 
-## Contrato visual esperado
+## 10. Operaciones que se implementarán en los siguientes steps
 
-Cada nodo serializado deberá exponer al frontend una forma equivalente a:
+### Core backend
+
+Archivo previsto:
+
+```text
+backend/app/structures/btree.py
+```
+
+Operaciones:
+
+- crear árbol con orden configurable;
+- insertar clave;
+- dividir nodo lleno;
+- buscar clave;
+- obtener recorrido por niveles;
+- calcular altura;
+- obtener métricas;
+- exportar estado interno seguro.
+
+### Servicio
+
+Archivo previsto:
+
+```text
+backend/app/services/btree_service.py
+```
+
+Responsabilidades:
+
+- administrar instancia del árbol;
+- validar payloads;
+- cargar demo dataset;
+- preparar respuestas para rutas;
+- no mezclar lógica HTTP con lógica de estructura.
+
+### Serialización React Flow
+
+Archivo a extender:
+
+```text
+backend/app/serializers/react_flow_serializer.py
+```
+
+Función prevista:
+
+```python
+serialize_btree()
+```
+
+Cada nodo serializado incluirá:
 
 ```json
 {
@@ -122,57 +246,120 @@ Cada nodo serializado deberá exponer al frontend una forma equivalente a:
 }
 ```
 
-El serializer deberá transformar esa información al contrato actual de React Flow usado por EduStruct:
+### Rutas REST
 
-```json
-{
-  "nodes": [],
-  "edges": []
-}
+Archivo previsto:
+
+```text
+backend/app/routes/btree.py
 ```
+
+Endpoints previstos:
+
+```text
+GET    /api/btree/state
+POST   /api/btree/insert
+GET    /api/btree/search?key={key}
+GET    /api/btree/traverse?type=levelorder
+POST   /api/btree/demo/load
+POST   /api/btree/reset
+```
+
+### Frontend
+
+Archivos previstos:
+
+```text
+frontend/src/api/btree.js
+frontend/src/pages/BTreePage.jsx
+frontend/src/router/AppRouter.jsx
+frontend/src/pages/HomePage.jsx
+```
+
+La página debe permitir:
+
+- insertar claves;
+- buscar claves;
+- cargar demo;
+- resetear árbol;
+- mostrar nodos multi-clave;
+- mostrar splits;
+- mostrar altura;
+- mostrar niveles;
+- mostrar recorrido por niveles.
 
 ---
 
-## Metadata de splits
+## 11. Dataset demo esperado
 
-Cada split deberá registrar metadata mínima:
+El demo debe basarse en expedientes académicos.
 
-```json
-{
-  "promotedKey": 40,
-  "before": {},
-  "after": {}
-}
+Fuente sugerida:
+
+```text
+datasets/records.json
 ```
 
-Esta información será consumida posteriormente por el frontend para explicar visualmente qué clave subió y cómo cambió la estructura.
+También puede agregarse un dataset incremental específico si se necesita una secuencia controlada de claves para forzar `splits` visibles.
+
+Archivo previsto si aplica:
+
+```text
+datasets/btree_records_demo.json
+```
+
+La secuencia demo debe provocar al menos:
+
+- un split de hoja;
+- un split que afecte la raíz;
+- crecimiento de altura;
+- varios niveles visibles.
 
 ---
 
-## Alcance del siguiente step
+## 12. Testing obligatorio en próximos steps
 
-El siguiente step debe implementar el núcleo de la estructura:
+Se crearán pruebas para:
 
-- `backend/app/structures/btree.py`
-- `backend/tests/structures/test_btree.py`
+```text
+backend/tests/structures/test_btree.py
+backend/tests/services/test_btree_service.py
+backend/tests/routes/test_btree_routes.py
+backend/tests/serializers/test_react_flow_btree_serializer.py
+```
 
-Debe incluir:
+Validaciones mínimas:
 
-- clase `BTreeNode`;
-- clase `BTree`;
-- orden configurable;
-- inserción manual;
-- split de nodos;
-- búsqueda;
+- inserciones ordenadas;
+- splits correctos;
+- búsqueda existente;
+- búsqueda inexistente;
 - recorrido por niveles;
-- métricas básicas de altura, niveles y cantidad de claves;
-- pruebas unitarias de estructura.
+- altura;
+- niveles;
+- serialización React Flow;
+- invariantes del árbol según orden configurable.
 
 ---
 
-## Workflow Git recomendado para este step
+## 13. Invariantes esperadas del Árbol B
 
-Antes de aplicar los cambios del ZIP:
+Para `order = m`:
+
+- cada nodo puede tener como máximo `m - 1` claves;
+- cada nodo interno puede tener como máximo `m` hijos;
+- las claves dentro de cada nodo están ordenadas;
+- todos los hijos mantienen rangos válidos respecto a las claves del padre;
+- todos los nodos hoja quedan al mismo nivel;
+- la raíz puede tener menos claves que el mínimo normal;
+- si la raíz no es hoja, debe tener al menos dos hijos;
+- la altura crece únicamente cuando la raíz se divide.
+
+---
+
+## 14. Workflow Git para este step
+
+Antes de iniciar la implementación de la épica:
 
 ```bash
 git checkout develop
@@ -180,21 +367,20 @@ git pull origin develop
 git checkout -b feature/epic-8-btree
 ```
 
-Commit semántico sugerido para este step:
+Commit sugerido para este step:
 
 ```bash
 git add docs/epic-8-step-1-btree-decision.md
-git commit -m "docs(btree): define epic 8 btree technical decision"
+git commit -m "docs(btree): define btree technical decision"
 ```
 
 ---
 
-## Validación del step
+## 15. Estado del step
 
-Este step queda validado cuando:
+Estado: **Pendiente de validación del usuario**.
 
-- existe la documentación incremental de decisión técnica;
-- no se modificó código funcional;
-- no se sobrescribió documentación previa;
-- queda definido formalmente que EduStruct implementará Árbol B y no B+;
-- queda aprobado el orden inicial `4` para la demo.
+Decisión propuesta: **implementar Árbol B**.
+
+No se debe avanzar al Step 2 hasta recibir validación explícita.
+
