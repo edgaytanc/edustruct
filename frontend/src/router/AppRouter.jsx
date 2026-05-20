@@ -4,6 +4,7 @@ import GeneralTreePage from "../pages/GeneralTreePage";
 import BinaryTreePage from "../pages/BinaryTreePage";
 import AVLPage from "../pages/AVLPage";
 import BTreePage from "../pages/BTreePage";
+import HashPage from "../pages/HashPage";
 
 const AppRouter = () => {
   return (
@@ -14,6 +15,7 @@ const AppRouter = () => {
         <Route path="/binary-tree" element={<BinaryTreePage />} />
         <Route path="/avl" element={<AVLPage />} />
         <Route path="/btree" element={<BTreePage />} />
+        <Route path="/hash" element={<HashPage />} />
       </Routes>
     </BrowserRouter>
   );
