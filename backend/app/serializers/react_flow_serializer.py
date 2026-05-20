@@ -764,3 +764,182 @@ def _hash_table_value_label(value: Any) -> str:
     if value is None:
         return ""
     return str(value)
+
+
+def serialize_graph(
+    graph: dict[str, Any],
+    traversal: dict[str, Any] | None = None,
+    search: dict[str, Any] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """
+    Serialize a directed prerequisite graph into React Flow nodes and edges.
+
+    Expected graph contract:
+    - nodes: list of {id, value, neighbors, degree, inDegree?}
+    - edges: list of {source, target}
+    - verticesCount / edgesCount / connectedComponents
+
+    The layout is deterministic and groups courses by incoming degree so the
+    prerequisite chain can be read from left to right without external graph
+    layout libraries.
+    """
+    graph_nodes = list(graph.get("nodes") or [])
+    graph_edges = list(graph.get("edges") or [])
+    traversal = traversal or {}
+    search = search or {}
+
+    visited_order = list(traversal.get("order") or [])
+    visited_lookup = {node_id: index for index, node_id in enumerate(visited_order)}
+    searched_node_id = search.get("nodeId") if search.get("found") else None
+    highlighted_edges = _graph_highlighted_edges(traversal.get("steps") or [])
+    levels = _graph_levels(graph_nodes=graph_nodes, graph_edges=graph_edges)
+    level_counters: dict[int, int] = {}
+
+    nodes: list[dict[str, Any]] = []
+    for item in graph_nodes:
+        node_id = str(item.get("id"))
+        level = levels.get(node_id, 0)
+        index_in_level = level_counters.get(level, 0)
+        level_counters[level] = index_in_level + 1
+
+        x = BASE_X + (level * HORIZONTAL_GAP)
+        y = BASE_Y + (index_in_level * VERTICAL_GAP)
+        value = item.get("value") or {}
+        label = _graph_node_label(item)
+        is_visited = node_id in visited_lookup
+        is_search_match = node_id == searched_node_id
+        category = _graph_node_category(
+            item=item,
+            is_visited=is_visited,
+            is_search_match=is_search_match,
+        )
+
+        metadata = dict(item.get("metadata") or {})
+        metadata.update(
+            {
+                "role": "graph-node",
+                "structure": "graph",
+                "value": value,
+                "neighbors": list(item.get("neighbors") or []),
+                "degree": item.get("degree", 0),
+                "outDegree": item.get("degree", 0),
+                "inDegree": item.get("inDegree", 0),
+                "level": level,
+                "visited": is_visited,
+                "visitOrder": visited_lookup.get(node_id),
+                "searchMatch": is_search_match,
+            }
+        )
+
+        nodes.append(
+            create_react_flow_node(
+                node_id=node_id,
+                label=label,
+                x=x,
+                y=y,
+                node_type="graphNode",
+                category=category,
+                metadata=metadata,
+            )
+        )
+
+    edges: list[dict[str, Any]] = []
+    for index, edge in enumerate(graph_edges):
+        source = str(edge.get("source"))
+        target = str(edge.get("target"))
+        is_highlighted = (source, target) in highlighted_edges
+        edges.append(
+            create_react_flow_edge(
+                edge_id=f"graph-edge-{source}-{target}-{index}",
+                source=source,
+                target=target,
+                edge_type="smoothstep",
+                label="habilita",
+                animated=is_highlighted,
+                relationship="prerequisite",
+            )
+        )
+        edges[-1]["data"].update(
+            {
+                "source": source,
+                "target": target,
+                "isTraversalEdge": is_highlighted,
+                "structure": "graph",
+            }
+        )
+
+    return {"nodes": nodes, "edges": edges}
+
+
+def _graph_node_label(item: dict[str, Any]) -> str:
+    value = item.get("value")
+    if isinstance(value, dict):
+        code = value.get("code") or item.get("id")
+        name = value.get("name") or value.get("label") or item.get("id")
+        return f"{code}\n{name}"
+    return str(value if value is not None else item.get("id"))
+
+
+def _graph_node_category(item: dict[str, Any], is_visited: bool, is_search_match: bool) -> str:
+    if is_search_match:
+        return "search-match"
+    if is_visited:
+        return "visited"
+    in_degree = int(item.get("inDegree", 0) or 0)
+    out_degree = int(item.get("degree", 0) or 0)
+    if in_degree == 0 and out_degree > 0:
+        return "source-course"
+    if out_degree == 0 and in_degree > 0:
+        return "terminal-course"
+    return "course"
+
+
+def _graph_highlighted_edges(steps: list[dict[str, Any]]) -> set[tuple[str, str]]:
+    highlighted: set[tuple[str, str]] = set()
+    for step in steps:
+        edge = step.get("edge") if isinstance(step, dict) else None
+        if not isinstance(edge, dict):
+            continue
+        source = edge.get("source")
+        target = edge.get("target")
+        if source is not None and target is not None:
+            highlighted.add((str(source), str(target)))
+    return highlighted
+
+
+def _graph_levels(
+    graph_nodes: list[dict[str, Any]],
+    graph_edges: list[dict[str, Any]],
+) -> dict[str, int]:
+    node_ids = [str(item.get("id")) for item in graph_nodes]
+    incoming: dict[str, int] = {node_id: 0 for node_id in node_ids}
+    outgoing: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
+
+    for edge in graph_edges:
+        source = str(edge.get("source"))
+        target = str(edge.get("target"))
+        if source not in outgoing or target not in incoming:
+            continue
+        outgoing[source].append(target)
+        incoming[target] += 1
+
+    queue = [node_id for node_id in node_ids if incoming[node_id] == 0]
+    levels: dict[str, int] = {node_id: 0 for node_id in queue}
+    cursor = 0
+
+    while cursor < len(queue):
+        current = queue[cursor]
+        cursor += 1
+        for neighbor in outgoing[current]:
+            levels[neighbor] = max(levels.get(neighbor, 0), levels.get(current, 0) + 1)
+            incoming[neighbor] -= 1
+            if incoming[neighbor] == 0:
+                queue.append(neighbor)
+
+    # Cycles are not expected in a prerequisite graph, but this keeps the UI
+    # stable if invalid data arrives.
+    for node_id in node_ids:
+        levels.setdefault(node_id, 0)
+
+    return levels
+
