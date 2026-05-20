@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.errors.exceptions import StructureEmptyError, ValidationError
+from app.errors.exceptions import DatasetError, StructureEmptyError, ValidationError
 from app.serializers.react_flow_serializer import serialize_queue
 from app.structures.queue import Queue
+from app.utils.dataset_loader import load_advisory_turns, load_students_by_carnet
 
 
 class QueueService:
@@ -93,22 +94,38 @@ class QueueService:
         }
         return result
 
-    def load_demo(self) -> dict[str, Any]:
-        """Load an educational demo queue for advisory turns."""
-        self._queue.clear()
-        demo_values = [
-            "Turno 1 - Ana López",
-            "Turno 2 - Carlos Méndez",
-            "Turno 3 - Sofía Ramírez",
-        ]
+    def get_advisory_turns(self) -> dict[str, Any]:
+        """Return advisory turns enriched with student information."""
+        turns = self._build_advisory_turns()
+        return {
+            "turns": turns,
+            "count": len(turns),
+            "context": "Turnos de asesoría académica",
+            "sourceDataset": "advisory_turns.json",
+        }
 
-        for value in demo_values:
-            self._queue.enqueue(value)
+    def load_advisory_turns_demo(self) -> dict[str, Any]:
+        """Load real advisory turns into the queue preserving FIFO order."""
+        self._queue.clear()
+        turns = self._build_advisory_turns()
+        labels = []
+
+        for turn in turns:
+            label = self._format_advisory_turn_label(turn)
+            labels.append(label)
+            self._queue.enqueue(label)
 
         result = self._build_result()
-        result["loaded"] = demo_values
+        result["loaded"] = labels
+        result["advisoryTurns"] = turns
         result["context"] = "Cola de turnos de asesoría académica"
+        result["sourceDataset"] = "advisory_turns.json"
+        result["queuePolicy"] = "FIFO"
         return result
+
+    def load_demo(self) -> dict[str, Any]:
+        """Load an educational demo queue for advisory turns."""
+        return self.load_advisory_turns_demo()
 
     def reset(self) -> dict[str, Any]:
         """Clear the queue."""
@@ -129,6 +146,92 @@ class QueueService:
             "nodes": visualization["nodes"],
             "edges": visualization["edges"],
         }
+
+    def _build_advisory_turns(self) -> list[dict[str, Any]]:
+        turns = load_advisory_turns()
+        students_by_carnet = load_students_by_carnet()
+        enriched_turns = []
+
+        for index, turn in enumerate(turns):
+            turn_id = self._required_dataset_field(
+                record=turn,
+                field="id",
+                dataset="advisory_turns.json",
+                index=index,
+            )
+            carnet = self._required_dataset_field(
+                record=turn,
+                field="student_carnet",
+                dataset="advisory_turns.json",
+                index=index,
+            )
+            reason = self._required_dataset_field(
+                record=turn,
+                field="reason",
+                dataset="advisory_turns.json",
+                index=index,
+            )
+
+            student = students_by_carnet.get(carnet)
+            if student is None:
+                raise DatasetError(
+                    message="El turno de asesoría referencia un estudiante inexistente.",
+                    details=[
+                        {
+                            "dataset": "advisory_turns.json",
+                            "student_carnet": carnet,
+                            "turnId": turn_id,
+                            "issue": "STUDENT_NOT_FOUND",
+                        }
+                    ],
+                )
+
+            enriched_turns.append(
+                {
+                    "id": turn_id,
+                    "studentCarnet": carnet,
+                    "studentName": student.get("name"),
+                    "studentEmail": student.get("email"),
+                    "studentStatus": student.get("status"),
+                    "reason": reason,
+                    "status": turn.get("status"),
+                    "createdAt": turn.get("created_at"),
+                    "queuePosition": index,
+                    "isFront": index == 0,
+                }
+            )
+
+        return enriched_turns
+
+    @staticmethod
+    def _format_advisory_turn_label(turn: dict[str, Any]) -> str:
+        return (
+            f"{turn['id']} - {turn['studentCarnet']} - "
+            f"{turn['studentName']} - {turn['reason']}"
+        )
+
+    @staticmethod
+    def _required_dataset_field(
+        record: dict[str, Any],
+        field: str,
+        dataset: str,
+        index: int,
+    ) -> str:
+        value = record.get(field)
+        if value is None or not str(value).strip():
+            raise DatasetError(
+                message="El dataset contiene un registro incompleto.",
+                details=[
+                    {
+                        "dataset": dataset,
+                        "index": index,
+                        "field": field,
+                        "issue": "REQUIRED",
+                    }
+                ],
+            )
+
+        return str(value).strip()
 
     @staticmethod
     def _validate_value(value: Any) -> None:

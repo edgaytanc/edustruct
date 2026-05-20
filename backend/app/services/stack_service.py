@@ -17,6 +17,14 @@ from app.structures.stack import Stack
 class StackService:
     """Service that exposes educational stack operations."""
 
+    DEFAULT_NAVIGATION_HISTORY = [
+        "Dashboard Académico",
+        "Pensum Ingeniería en Sistemas",
+        "Curso CUR-013 - Programación III",
+        "Prerrequisitos del curso",
+        "Expediente Estudiantil",
+    ]
+
     def __init__(self) -> None:
         self._stack = Stack()
 
@@ -94,16 +102,50 @@ class StackService:
         return result
 
     def load_demo(self) -> dict[str, Any]:
-        """Load an educational demo stack for navigation history."""
-        self._stack.clear()
-        demo_values = ["Dashboard", "Pensum", "Curso MAT101"]
+        """Load the default academic navigation history demo."""
+        return self.load_navigation_history_demo()
 
-        for value in demo_values:
-            self._stack.push(value)
+    def load_navigation_history_demo(self) -> dict[str, Any]:
+        """Load a contextual academic navigation history into the stack."""
+        self._stack.clear()
+
+        for module in self.DEFAULT_NAVIGATION_HISTORY:
+            self._stack.push(module)
 
         result = self._build_result()
-        result["loaded"] = demo_values
+        result["loaded"] = list(self.DEFAULT_NAVIGATION_HISTORY)
         result["context"] = "Historial de navegación académica"
+        result["navigationPolicy"] = "LIFO"
+        result["businessCase"] = "Botón atrás / deshacer navegación dentro del sistema académico"
+        return result
+
+    def navigate_to_module(self, module: Any) -> dict[str, Any]:
+        """Push a newly visited academic module onto the navigation stack."""
+        self._validate_value(module, field="module")
+        self._stack.push(module)
+
+        result = self._build_result()
+        result["navigatedTo"] = module
+        result["navigationAction"] = "push"
+        result["context"] = "Nueva consulta académica registrada en el historial"
+        result["navigationPolicy"] = "LIFO"
+        return result
+
+    def back(self) -> dict[str, Any]:
+        """Go back by popping the current academic module from the stack."""
+        if self._stack.is_empty():
+            raise StructureEmptyError(
+                message="No se puede retroceder porque el historial académico está vacío.",
+                details=[{"operation": "navigation-back", "issue": "EMPTY_STACK"}],
+            )
+
+        previous_top = self._stack.pop()
+        result = self._build_result()
+        result["backFrom"] = previous_top
+        result["navigationAction"] = "back"
+        result["currentModule"] = result.get("top")
+        result["context"] = "Retroceso de navegación académica ejecutado"
+        result["navigationPolicy"] = "LIFO"
         return result
 
     def reset(self) -> dict[str, Any]:
@@ -123,18 +165,20 @@ class StackService:
             "isEmpty": self._stack.is_empty(),
             "nodes": visualization["nodes"],
             "edges": visualization["edges"],
+            "context": "Historial de navegación académica",
+            "navigationPolicy": "LIFO",
         }
 
     @staticmethod
-    def _validate_value(value: Any) -> None:
+    def _validate_value(value: Any, field: str = "value") -> None:
         if value is None:
             raise ValidationError(
-                message="El campo value es obligatorio.",
-                details=[{"field": "value", "issue": "REQUIRED"}],
+                message=f"El campo {field} es obligatorio.",
+                details=[{"field": field, "issue": "REQUIRED"}],
             )
 
         if isinstance(value, str) and not value.strip():
             raise ValidationError(
-                message="El campo value no puede estar vacío.",
-                details=[{"field": "value", "issue": "EMPTY_STRING"}],
+                message=f"El campo {field} no puede estar vacío.",
+                details=[{"field": field, "issue": "EMPTY_STRING"}],
             )

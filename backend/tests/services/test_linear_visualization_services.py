@@ -34,3 +34,28 @@ def test_queue_service_returns_react_flow_visualization():
     assert result["nodes"][0]["data"]["label"] == "FRONT"
     assert result["nodes"][-1]["data"]["label"] == "REAR"
     assert len(result["edges"]) == 3
+
+
+def test_queue_advisory_demo_returns_react_flow_visualization():
+    service = QueueService()
+
+    result = service.load_advisory_turns_demo()
+
+    assert result["size"] == 4
+    assert result["nodes"][0]["data"]["label"] == "FRONT"
+    assert result["nodes"][1]["data"]["label"].startswith("TURN-001")
+    assert result["nodes"][1]["data"]["metadata"]["isFront"] is True
+    assert result["nodes"][-1]["data"]["label"] == "REAR"
+    assert len(result["edges"]) == 5
+
+
+def test_stack_navigation_history_demo_returns_react_flow_visualization():
+    service = StackService()
+
+    result = service.load_navigation_history_demo()
+
+    assert result["size"] == 5
+    assert result["nodes"][0]["data"]["label"] == "TOP"
+    assert result["nodes"][1]["data"]["label"] == "Expediente Estudiantil"
+    assert result["nodes"][1]["data"]["metadata"]["isTop"] is True
+    assert len(result["edges"]) == 5

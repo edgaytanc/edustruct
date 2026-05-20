@@ -108,6 +108,18 @@ def front():
     return jsonify(response), 200
 
 
+@queue_bp.route("/advisory-turns", methods=["GET"])
+def advisory_turns():
+    result = queue_service.get_advisory_turns()
+    response = success_response(
+        message="Turnos de asesoría académica obtenidos correctamente.",
+        structure="queue",
+        operation="advisory-turns",
+        result=result,
+    )
+    return jsonify(response), 200
+
+
 @queue_bp.route("/demo/load", methods=["POST"])
 def load_demo():
     result = queue_service.load_demo()
@@ -115,6 +127,21 @@ def load_demo():
         message="Dataset demo cargado correctamente en la cola.",
         structure="queue",
         operation="demo-load",
+        nodes=_nodes(result),
+        edges=_edges(result),
+        metrics=_metrics(result),
+        result=result,
+    )
+    return jsonify(response), 200
+
+
+@queue_bp.route("/demo/load-advisory", methods=["POST"])
+def load_advisory_demo():
+    result = queue_service.load_advisory_turns_demo()
+    response = success_response(
+        message="Turnos reales de asesoría cargados correctamente en la cola.",
+        structure="queue",
+        operation="advisory-demo-load",
         nodes=_nodes(result),
         edges=_edges(result),
         metrics=_metrics(result),
