@@ -635,3 +635,132 @@ def _btree_x_position(level: int, index_in_level: int, total_in_level: int) -> i
     btree_horizontal_gap = HORIZONTAL_GAP + 80
     level_width = (total_in_level - 1) * btree_horizontal_gap
     return BASE_X - (level_width // 2) + (index_in_level * btree_horizontal_gap)
+
+
+def serialize_hash_table(
+    buckets: list[dict[str, Any]],
+    metrics: dict[str, Any] | None = None,
+    last_operation: dict[str, Any] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """
+    Serialize hash-table buckets and chains into React Flow nodes and edges.
+
+    Expected bucket contract:
+    - bucketIndex: numeric bucket position
+    - size: number of entries in the bucket
+    - hasCollision: True when the bucket stores more than one entry
+    - items: ordered entries with key, value, chainPosition and collision
+
+    The visual layout places buckets vertically and chained entries horizontally,
+    making separate chaining collisions explicit and easy to defend in class.
+    """
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    metrics_payload = dict(metrics or {})
+    last_operation_payload = dict(last_operation or {}) if last_operation else None
+    highlighted_key = last_operation_payload.get("key") if last_operation_payload else None
+    highlighted_bucket = last_operation_payload.get("bucketIndex") if last_operation_payload else None
+
+    for bucket_position, bucket in enumerate(buckets):
+        bucket_index = int(bucket.get("bucketIndex", bucket_position))
+        items = list(bucket.get("items") or [])
+        bucket_size = int(bucket.get("size", len(items)))
+        has_collision = bool(bucket.get("hasCollision", bucket_size > 1))
+        is_highlighted_bucket = highlighted_bucket == bucket_index
+        bucket_node_id = f"hash-bucket-{bucket_index}"
+
+        bucket_metadata = {
+            "structure": "hash-table",
+            "role": "bucket",
+            "bucketIndex": bucket_index,
+            "size": bucket_size,
+            "hasCollision": has_collision,
+            "isHighlighted": is_highlighted_bucket,
+            "metrics": metrics_payload,
+            "lastOperation": last_operation_payload,
+        }
+
+        if has_collision:
+            bucket_category = "bucket-collision"
+        elif bucket_size == 0:
+            bucket_category = "bucket-empty"
+        else:
+            bucket_category = "bucket"
+
+        nodes.append(
+            create_react_flow_node(
+                node_id=bucket_node_id,
+                label=f"Bucket {bucket_index}",
+                x=BASE_X,
+                y=BASE_Y + (bucket_position * VERTICAL_GAP),
+                node_type="hashBucket",
+                category=bucket_category,
+                metadata=bucket_metadata,
+            )
+        )
+
+        previous_node_id = bucket_node_id
+        for item_position, item in enumerate(items):
+            key = str(item.get("key"))
+            chain_position = int(item.get("chainPosition", item_position))
+            item_collision = bool(item.get("collision", chain_position > 0))
+            is_highlighted_item = highlighted_key == key
+            item_node_id = f"hash-entry-{bucket_index}-{chain_position}-{key}"
+            student_name = _hash_table_value_label(item.get("value"))
+            label = f"{key}\n{student_name}" if student_name else key
+
+            metadata = {
+                "structure": "hash-table",
+                "role": "entry",
+                "bucketIndex": bucket_index,
+                "key": key,
+                "value": item.get("value"),
+                "chainPosition": chain_position,
+                "collision": item_collision,
+                "bucketHasCollision": has_collision,
+                "isHighlighted": is_highlighted_item,
+                "lastOperation": last_operation_payload,
+            }
+
+            if is_highlighted_item:
+                category = "highlighted-collision" if item_collision else "highlighted-entry"
+            elif item_collision:
+                category = "collision"
+            else:
+                category = "entry"
+
+            nodes.append(
+                create_react_flow_node(
+                    node_id=item_node_id,
+                    label=label,
+                    x=BASE_X + ((chain_position + 1) * HORIZONTAL_GAP),
+                    y=BASE_Y + (bucket_position * VERTICAL_GAP),
+                    node_type="hashEntry",
+                    category=category,
+                    metadata=metadata,
+                )
+            )
+
+            edges.append(
+                create_react_flow_edge(
+                    edge_id=f"hash-edge-{previous_node_id}-{item_node_id}",
+                    source=previous_node_id,
+                    target=item_node_id,
+                    edge_type="smoothstep",
+                    label="head" if previous_node_id == bucket_node_id else "next",
+                    animated=item_collision or is_highlighted_item,
+                    relationship="chain",
+                )
+            )
+            previous_node_id = item_node_id
+
+    return {"nodes": nodes, "edges": edges}
+
+
+def _hash_table_value_label(value: Any) -> str:
+    """Return a compact label for hash-table entry values."""
+    if isinstance(value, dict):
+        return str(value.get("full_name") or value.get("name") or value.get("student_id") or "")
+    if value is None:
+        return ""
+    return str(value)
