@@ -13,9 +13,16 @@ stack_bp = Blueprint(
 stack_service = StackService()
 
 
+def _payload():
+    return request.get_json(silent=True) or {}
+
+
 def _payload_value():
-    payload = request.get_json(silent=True) or {}
-    return payload.get("value")
+    return _payload().get("value")
+
+
+def _payload_module():
+    return _payload().get("module")
 
 
 def _metrics(result):
@@ -112,9 +119,54 @@ def peek():
 def load_demo():
     result = stack_service.load_demo()
     response = success_response(
-        message="Dataset demo cargado correctamente en la pila.",
+        message="Historial académico demo cargado correctamente en la pila.",
         structure="stack",
         operation="demo-load",
+        nodes=_nodes(result),
+        edges=_edges(result),
+        metrics=_metrics(result),
+        result=result,
+    )
+    return jsonify(response), 200
+
+
+@stack_bp.route("/demo/load-history", methods=["POST"])
+def load_history_demo():
+    result = stack_service.load_navigation_history_demo()
+    response = success_response(
+        message="Historial de navegación académica cargado correctamente.",
+        structure="stack",
+        operation="demo-load-history",
+        nodes=_nodes(result),
+        edges=_edges(result),
+        metrics=_metrics(result),
+        result=result,
+    )
+    return jsonify(response), 200
+
+
+@stack_bp.route("/navigation/push", methods=["POST"])
+def navigation_push():
+    result = stack_service.navigate_to_module(_payload_module())
+    response = success_response(
+        message="Módulo académico agregado al historial de navegación.",
+        structure="stack",
+        operation="navigation-push",
+        nodes=_nodes(result),
+        edges=_edges(result),
+        metrics=_metrics(result),
+        result=result,
+    )
+    return jsonify(response), 201
+
+
+@stack_bp.route("/navigation/back", methods=["DELETE"])
+def navigation_back():
+    result = stack_service.back()
+    response = success_response(
+        message="Retroceso de navegación académica ejecutado correctamente.",
+        structure="stack",
+        operation="navigation-back",
         nodes=_nodes(result),
         edges=_edges(result),
         metrics=_metrics(result),
