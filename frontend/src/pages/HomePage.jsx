@@ -36,7 +36,7 @@ const HomePage = () => {
           datos aplicadas al contexto educativo.
         </p>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-5">
+        <div className="mt-6 grid gap-4 lg:grid-cols-6">
           <article className="rounded-xl border border-cyan-700 bg-gray-900 p-4">
             <h3 className="text-lg font-medium text-cyan-400">
               Estado de conexión con el backend
@@ -117,6 +117,26 @@ const HomePage = () => {
               className="mt-5 inline-flex rounded-xl bg-sky-600 px-4 py-2 font-semibold text-white transition hover:bg-sky-500"
             >
               Abrir árbol B
+            </Link>
+          </article>
+
+
+
+          <article className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+            <h3 className="text-lg font-medium text-white">
+              Épica 9 — Tabla Hash
+            </h3>
+
+            <p className="mt-3 text-gray-300">
+              Busca estudiantes por carnet usando función hash propia, buckets,
+              encadenamiento y colisiones visibles.
+            </p>
+
+            <Link
+              to="/hash"
+              className="mt-5 inline-flex rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white transition hover:bg-orange-500"
+            >
+              Abrir tabla hash
             </Link>
           </article>
 
