@@ -157,6 +157,24 @@ const HomePage = () => {
               Abrir árbol AVL
             </Link>
           </article>
+
+          <article className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+            <h3 className="text-lg font-medium text-white">
+              Épica 10 — Grafos DFS/BFS
+            </h3>
+
+            <p className="mt-3 text-gray-300">
+              Visualiza el mapa de prerrequisitos como grafo dirigido, con
+              recorridos DFS/BFS, orden de visita y grados de nodo.
+            </p>
+
+            <Link
+              to="/graph"
+              className="mt-5 inline-flex rounded-xl bg-lime-700 px-4 py-2 font-semibold text-white transition hover:bg-lime-600"
+            >
+              Abrir grafo
+            </Link>
+          </article>
         </div>
       </section>
     </MainLayout>
