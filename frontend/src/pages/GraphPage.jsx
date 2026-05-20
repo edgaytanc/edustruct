@@ -193,6 +193,37 @@ const buildHighlightedEdges = (steps = [], visitedIds = new Set()) => {
   return edges;
 };
 
+
+const getGraphCourseOptions = (payload = {}) => {
+  const optionsById = new Map();
+
+  const addOption = (nodeId, value = {}) => {
+    const normalizedId = normalizeCourseId(nodeId);
+    if (!normalizedId || optionsById.has(normalizedId)) {
+      return;
+    }
+
+    const metadata = { value };
+    optionsById.set(normalizedId, {
+      id: normalizedId,
+      code: getCourseCode(metadata, normalizedId),
+      name: getCourseName(metadata),
+    });
+  };
+
+  (payload?.graph?.nodes || []).forEach((node) => {
+    addOption(node?.id, node?.value);
+  });
+
+  (payload?.nodes || []).forEach((node) => {
+    const metadata = node?.data?.metadata || {};
+    const value = metadata?.value || {};
+    addOption(node?.id, value);
+  });
+
+  return Array.from(optionsById.values()).sort((left, right) => left.id.localeCompare(right.id));
+};
+
 const GraphPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -210,7 +241,7 @@ const GraphPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const graphNodes = graphPayload?.graph?.nodes || [];
+  const courseOptions = useMemo(() => getGraphCourseOptions(graphPayload), [graphPayload]);
   const metrics = graphPayload?.metrics || {};
 
   const visitedIds = useMemo(() => {
@@ -245,7 +276,7 @@ const GraphPage = () => {
     setNodes(normalizeGraphNodes(payload?.nodes || [], visualState));
     setEdges(normalizeGraphEdges(payload?.edges || [], visualState));
 
-    const firstNodeId = payload?.graph?.nodes?.[0]?.id;
+    const firstNodeId = getGraphCourseOptions(payload)[0]?.id;
     if (!selectedStartNode && firstNodeId) {
       setSelectedStartNode(String(firstNodeId));
     }
@@ -493,9 +524,9 @@ const GraphPage = () => {
                 className="mt-2 w-full rounded-xl border border-gray-600 bg-gray-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
               >
                 <option value="">Seleccionar curso</option>
-                {graphNodes.map((node) => (
-                  <option key={node.id} value={node.id}>
-                    {node.id} — {getCourseName({ value: node.value })}
+                {courseOptions.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.code} — {course.name}
                   </option>
                 ))}
               </select>
@@ -615,8 +646,10 @@ const GraphPage = () => {
                   className="w-full rounded-xl border border-gray-600 bg-gray-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
                 >
                   <option value="">Curso prerrequisito</option>
-                  {graphNodes.map((node) => (
-                    <option key={`source-${node.id}`} value={node.id}>{node.id}</option>
+                  {courseOptions.map((course) => (
+                    <option key={`source-${course.id}`} value={course.id}>
+                      {course.code} — {course.name}
+                    </option>
                   ))}
                 </select>
                 <select
@@ -625,13 +658,15 @@ const GraphPage = () => {
                   className="w-full rounded-xl border border-gray-600 bg-gray-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
                 >
                   <option value="">Curso habilitado</option>
-                  {graphNodes.map((node) => (
-                    <option key={`target-${node.id}`} value={node.id}>{node.id}</option>
+                  {courseOptions.map((course) => (
+                    <option key={`target-${course.id}`} value={course.id}>
+                      {course.code} — {course.name}
+                    </option>
                   ))}
                 </select>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || courseOptions.length < 2}
                   className="w-full rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Agregar arista
