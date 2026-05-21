@@ -6,6 +6,7 @@ import AVLPage from "../pages/AVLPage";
 import BTreePage from "../pages/BTreePage";
 import HashPage from "../pages/HashPage";
 import GraphPage from "../pages/GraphPage";
+import LinearStructuresPage from "../pages/LinearStructuresPage";
 
 const AppRouter = () => {
   return (
@@ -18,6 +19,7 @@ const AppRouter = () => {
         <Route path="/btree" element={<BTreePage />} />
         <Route path="/hash" element={<HashPage />} />
         <Route path="/graph" element={<GraphPage />} />
+        <Route path="/linear-structures" element={<LinearStructuresPage />} />
       </Routes>
     </BrowserRouter>
   );
