@@ -51,3 +51,26 @@ def test_queue_state_response_includes_front_rear_markers(client):
     assert body["data"]["nodes"][-1]["data"]["label"] == "REAR"
     assert body["data"]["metrics"]["count"] == 1
     assert body["data"]["metrics"]["edgesCount"] == 2
+
+
+def test_queue_advisory_demo_response_includes_front_rear_markers(client):
+    response = client.post("/api/queue/demo/load-advisory")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["data"]["nodes"][0]["data"]["label"] == "FRONT"
+    assert body["data"]["nodes"][1]["data"]["label"].startswith("TURN-001")
+    assert body["data"]["nodes"][-1]["data"]["label"] == "REAR"
+    assert body["data"]["metrics"]["count"] == 4
+    assert body["data"]["metrics"]["edgesCount"] == 5
+
+
+def test_stack_history_demo_response_includes_top_marker(client):
+    response = client.post("/api/stack/demo/load-history")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["data"]["nodes"][0]["data"]["label"] == "TOP"
+    assert body["data"]["nodes"][1]["data"]["label"] == "Expediente Estudiantil"
+    assert body["data"]["metrics"]["count"] == 5
+    assert body["data"]["metrics"]["edgesCount"] == 5

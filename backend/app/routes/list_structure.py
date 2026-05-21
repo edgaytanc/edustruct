@@ -48,6 +48,21 @@ def get_state():
     return jsonify(response), 200
 
 
+@list_structure_bp.route("/courses", methods=["GET"])
+def get_courses():
+    result = list_service.get_available_courses()
+    response = success_response(
+        message="Cursos con inscripciones obtenidos correctamente.",
+        structure="list",
+        operation="courses",
+        nodes=[],
+        edges=[],
+        metrics=create_metrics(count=result.get("size", 0)),
+        result=result,
+    )
+    return jsonify(response), 200
+
+
 @list_structure_bp.route("/insert", methods=["POST"])
 def insert():
     payload = request.get_json(silent=True) or {}
@@ -104,6 +119,22 @@ def load_demo():
         message="Dataset demo cargado correctamente en la lista.",
         structure="list",
         operation="demo-load",
+        nodes=_nodes(result),
+        edges=_edges(result),
+        metrics=_metrics(result),
+        result=result,
+    )
+    return jsonify(response), 200
+
+
+@list_structure_bp.route("/demo/load-course", methods=["POST"])
+def load_course_demo():
+    payload = request.get_json(silent=True) or {}
+    result = list_service.load_course_enrollments(payload.get("courseId"))
+    response = success_response(
+        message="Inscripciones reales cargadas correctamente en la lista.",
+        structure="list",
+        operation="demo-load-course",
         nodes=_nodes(result),
         edges=_edges(result),
         metrics=_metrics(result),

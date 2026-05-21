@@ -12,8 +12,10 @@ services:
       DEBUG: "True"
       PORT: 5000
       FRONTEND_URL: ${FRONTEND_URL}
+      DATASETS_DIR: /datasets
     volumes:
       - ./backend:/app
+      - ./datasets:/datasets:ro
     networks:
       - edustruct-network
 

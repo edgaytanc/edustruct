@@ -71,3 +71,55 @@ def test_reset_clears_list():
 
     assert result["reset"] is True
     assert result["items"] == []
+
+
+def test_get_available_courses_returns_enrollment_courses():
+    service = ListService()
+
+    result = service.get_available_courses()
+
+    assert result["size"] >= 2
+    assert result["courses"][0]["courseId"] == "CUR-013"
+    assert result["courses"][0]["enrolledCount"] == 3
+    assert result["courses"][0]["label"] == "SIS-304 - Programación III"
+
+
+def test_load_course_enrollments_uses_real_dataset_students():
+    service = ListService()
+
+    result = service.load_course_enrollments("CUR-013")
+
+    assert result["courseId"] == "CUR-013"
+    assert result["course"]["label"] == "SIS-304 - Programación III"
+    assert result["items"] == [
+        "2024001 - Ana López",
+        "2024002 - Carlos Pérez",
+        "2024003 - María García",
+    ]
+    assert result["head"] == "2024001 - Ana López"
+    assert result["tail"] == "2024003 - María García"
+    assert result["students"][0]["email"] == "ana.lopez@edustruct.edu"
+
+
+def test_load_demo_uses_default_real_course_dataset():
+    service = ListService()
+
+    result = service.load_demo()
+
+    assert result["courseId"] == "CUR-013"
+    assert result["items"][0] == "2024001 - Ana López"
+    assert result["context"] == "Lista enlazada de estudiantes inscritos por curso"
+
+
+def test_load_unknown_course_raises_not_found():
+    service = ListService()
+
+    with pytest.raises(NotFoundError):
+        service.load_course_enrollments("CUR-999")
+
+
+def test_load_course_without_course_id_raises_validation_error():
+    service = ListService()
+
+    with pytest.raises(ValidationError):
+        service.load_course_enrollments(None)
